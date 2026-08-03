@@ -63,3 +63,38 @@ $dice
 | select SideWeights SideValues DisplayName
 | save -f ./data/dice.json
 ```
+
+Additionally, it turns out that items which originate in DLC (including dice) are stored in yet another xml file: `item__dlc.xml`. Thankfully it has the same layout as the standard `item.xml` - but we need to union those results in.
+
+```nu
+let dice = (
+    open ./data/item.xml
+    | get content.0.content
+    | where tag == 'Die'
+    | get attributes
+)
+
+let dlc_dice = (
+    open ./data/item__dlc.xml
+    | get content.0.content
+    | where tag == 'Die'
+    | get attributes
+)
+
+let ui_map = (
+    open ./data/text_ui_items.xml
+    | get content
+    | where {|row| $row.content.0.content.0.content | str contains -i 'die'}
+    | get content
+    | each {|row| {
+        UIName: $row.0.content.0.content
+        DisplayName: $row.2.content.0.content
+      }}
+)
+
+$dice 
+| append $dlc_dice
+| join $ui_map UIName
+| select SideWeights SideValues DisplayName
+| save -f ./data/dice.json
+```
