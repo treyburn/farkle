@@ -24,7 +24,7 @@ open ./data/item.xml
 ### Data Processing
 The above got us pretty close. However we were still missing in he in-game UI display name for items - as that wasn't encoded in the `item.xml` file.
 
-Looking at the game data files - I found a `Localization` dir with an `English_xml.pak` file. Same as above - I extracted this dir and within it was a `text_ui_items.xml`.
+Looking at the game data files - I found a `{STEAM_DIR}/steamapps/common/KingdomComeDeliverance2/Localization` dir with an `English_xml.pak` file. Same as above - I extracted this dir and within it was a `text_ui_items.xml`.
 
 Exploring the file - I found that it contained a mapping of `UIName` from the `item.xml` to the in-game display name (and possibly a quest text reference name - unclear what the second value means.)
 
