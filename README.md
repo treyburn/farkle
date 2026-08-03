@@ -1,13 +1,13 @@
 # farkle
-A TUI for interactive dice roll tables in KCD2's farkle minigame
+A TUI for interactive dice roll tables in KCD2's farkle minigame.
 
 ## Data Processing
 ### Data Exploration
-KCD2 stores it's data files under `...` with the extension of `.pak`.
+KCD2 stores it's data files under `{STEAM_DIR}/steamapps/common/KingdomComeDeliverance2/Data` with the extension of `.pak`.
 
 A `.pak` file is simple a zipped dir of `.xml` and `.tbl` files. The `.tbl` files themselves are just "compiled" artifacts based on the raw `.xml` files that are optimized for reading by the game engine.
 
-A `Table.pak` file contains everything we need. Once unzipped - we find a `...path/items/item.xml` file that contains what we are looking for - the dice weight tables.
+A `Table.pak` file contains everything we need. Once unzipped - we find a `./Libs/Tables/item/item.xml` file that contains what we are looking for: the dice weight values.
 
 ### Data Extraction
 We can use [nushell](https://www.nushell.sh/) to make easy work of this and transform the full `items.xml` into an easier to parse subset of just the dice weights.
@@ -22,7 +22,7 @@ open ./data/item.xml
 ```
 
 ### Data Processing
-That got us pretty close. However we were still missing in he in-game UI display name for items - as that wasn't encoded in the `item.xml` file.
+The above got us pretty close. However we were still missing in he in-game UI display name for items - as that wasn't encoded in the `item.xml` file.
 
 Looking at the game data files - I found a `Localization` dir with an `English_xml.pak` file. Same as above - I extracted this dir and within it was a `text_ui_items.xml`.
 
@@ -64,7 +64,7 @@ $dice
 | save -f ./data/dice.json
 ```
 
-Additionally, it turns out that items which originate in DLC (including dice) are stored in yet another xml file: `item__dlc.xml`. Thankfully it has the same layout as the standard `item.xml` - but we need to union those results in.
+Additionally, it turns out that items which originate in DLC (including dice) are stored in yet another xml file: `item__dlc.xml`. Thankfully it has the same layout as the standard `item.xml` - but we need to union those results in. `nu` to the rescue yet again.
 
 ```nu
 let dice = (
