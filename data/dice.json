@@ -1,0 +1,217 @@
+[
+  {
+    "SideWeights": "6 1 6 1 6 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Aranka's die"
+  },
+  {
+    "SideWeights": "1 3 2 2 2 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Unlucky die"
+  },
+  {
+    "SideWeights": "3 1 6 1 1 3",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Saint Antiochus' die"
+  },
+  {
+    "SideWeights": "2 1 1 1 1 3",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Shrinking die"
+  },
+  {
+    "SideWeights": "1 1 1 1 1 1",
+    "SideValues": "6 1 2 3 4 5",
+    "DisplayName": "Balatro's die"
+  },
+  {
+    "SideWeights": "3 1 1 1 6 3",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Painted die"
+  },
+  {
+    "SideWeights": "3 3 3 3 3 6",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Ci die"
+  },
+  {
+    "SideWeights": "8 8 1 1 1 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Monk's die"
+  },
+  {
+    "SideWeights": "1 1 1 1 1 1",
+    "SideValues": "6 1 2 3 4 5",
+    "DisplayName": "Devil's head die"
+  },
+  {
+    "SideWeights": "2 8 2 8 2 8",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Even die"
+  },
+  {
+    "SideWeights": "6 0 1 1 6 4",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Favourable die"
+  },
+  {
+    "SideWeights": "2 3 2 3 7 3",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Lousy gambler's die"
+  },
+  {
+    "SideWeights": "5 3 2 3 5 3",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Cautious cheater's die"
+  },
+  {
+    "SideWeights": "4 5 7 1 1 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Holy Trinity die"
+  },
+  {
+    "SideWeights": "7 2 2 2 2 4",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Heavenly Kingdom die"
+  },
+  {
+    "SideWeights": "6 1 3 3 0 0",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Pie die"
+  },
+  {
+    "SideWeights": "4 6 7 8 4 3",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "King's die"
+  },
+  {
+    "SideWeights": "3 3 3 3 3 6",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Lu die"
+  },
+  {
+    "SideWeights": "6 1 2 3 4 6",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Lucky die"
+  },
+  {
+    "SideWeights": "6 1 2 3 4 6",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Lucky die"
+  },
+  {
+    "SideWeights": "4 5 6 7 1 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Mathematician's die"
+  },
+  {
+    "SideWeights": "1 1 1 1 1 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Ordinary die"
+  },
+  {
+    "SideWeights": "8 2 8 2 8 2",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Odd die"
+  },
+  {
+    "SideWeights": "1 1 1 1 1 1 ",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "St. Stephen's die"
+  },
+  {
+    "SideWeights": "1 1 1 1 1 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Hugo's die"
+  },
+  {
+    "SideWeights": "4 2 2 2 3 3",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Strip die"
+  },
+  {
+    "SideWeights": "1 1 1 1 1 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Molar die"
+  },
+  {
+    "SideWeights": "1 1 1 1 1 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Premolar die"
+  },
+  {
+    "SideWeights": "1 1 1 1 1 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Wisdom tooth die"
+  },
+  {
+    "SideWeights": "2 1 1 1 1 1 ",
+    "SideValues": "6 1 2 3 4 5 ",
+    "DisplayName": "Tengri’s die"
+  },
+  {
+    "SideWeights": "3 4 1 1 2 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Unbalanced die"
+  },
+  {
+    "SideWeights": "1 5 5 5 5 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Die of misfortune"
+  },
+  {
+    "SideWeights": "1 5 6 2 2 2",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Wagoner's die"
+  },
+  {
+    "SideWeights": "1 3 2 2 2 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Painter's die B"
+  },
+  {
+    "SideWeights": "1 3 2 2 2 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Painter's die G"
+  },
+  {
+    "SideWeights": "1 3 2 2 2 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Painter's die R"
+  },
+  {
+    "SideWeights": "10 1 1 1 1 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Weighted die"
+  },
+  {
+    "SideWeights": "3 3 3 3 3 6",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Fer die"
+  },
+  {
+    "SideWeights": "3 2 3 2 3 4",
+    "SideValues": "0 1 2 3 4 5 ",
+    "DisplayName": "Greasy die"
+  },
+  {
+    "SideWeights": "1 5 1 1 7 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Grimy die"
+  },
+  {
+    "SideWeights": "6 6 1 1 6 3",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Sad Greaser's die"
+  },
+  {
+    "SideWeights": "2 1 4 1 2 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Trinity die"
+  },
+  {
+    "SideWeights": "1 10 1 1 1 1",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Grozav's lucky die"
+  }
+]
