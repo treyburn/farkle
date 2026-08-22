@@ -73,7 +73,7 @@ func (r rawDie) toDie() (Die, error) {
 	}
 	id, err := uuid.Parse(raw)
 	if err != nil {
-		return Die{}, fmt.Errorf("Id %q: %w", raw, err)
+		return Die{}, fmt.Errorf("invalid Id %q: %w", raw, err)
 	}
 
 	weights, err := parseInts(r.SideWeights)

@@ -11,6 +11,8 @@ import (
 // marks a joker, a wild face that may stand in for any pip.
 type Face uint8
 
+// The faces of a die. One through Six are the numbered pips; Joker is the
+// wild face. The zero value is not a valid Face.
 const (
 	One Face = iota + 1
 	Two
