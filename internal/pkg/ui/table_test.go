@@ -84,7 +84,7 @@ func TestDefaultColumnsCoverEveryFace(t *testing.T) {
 	for i, c := range cols {
 		titles[i] = c.Title
 	}
-	assert.Equal(t, []string{"Die", "1", "2", "3", "4", "5", "6", "Joker"}, titles)
+	assert.Equal(t, []string{"Name", "1", "2", "3", "4", "5", "6", "Joker"}, titles)
 
 	tengri := parseFixture(t)[2]
 	var sum float64
@@ -160,9 +160,9 @@ func TestDefaultColumnsDropJokerWhenEffective(t *testing.T) {
 		return out
 	}
 
-	assert.Equal(t, []string{"Die", "1", "2", "3", "4", "5", "6", "Joker"},
+	assert.Equal(t, []string{"Name", "1", "2", "3", "4", "5", "6", "Joker"},
 		titles(DefaultColumns(game.Literal)))
-	assert.Equal(t, []string{"Die", "1", "2", "3", "4", "5", "6"},
+	assert.Equal(t, []string{"Name", "1", "2", "3", "4", "5", "6"},
 		titles(DefaultColumns(game.Effective)),
 		"Effective counts the joker into every pip, so its own column would double-count it")
 
@@ -173,6 +173,67 @@ func TestDefaultColumnsDropJokerWhenEffective(t *testing.T) {
 		tengri.ProbBy(game.One, game.Effective), tolerance)
 }
 
+// TestSumProbCountsAJokerOnce is the arithmetic multi-select turns on. Under
+// Effective a joker stands in for every pip picked, but one roll is one face:
+// adding ProbEffective across the picked faces would count that joker mass
+// once per face and report odds no die actually has.
+func TestSumProbCountsAJokerOnce(t *testing.T) {
+	tengri := parseFixture(t)[2]
+	require.NotZero(t, tengri.Prob(game.Joker))
+	oneFive := []game.Face{game.One, game.Five}
+
+	assert.InDelta(t, tengri.Prob(game.One)+tengri.Prob(game.Five),
+		SumProb(tengri, oneFive, game.Literal), tolerance)
+
+	assert.InDelta(t, tengri.Prob(game.One)+tengri.Prob(game.Five)+tengri.Prob(game.Joker),
+		SumProb(tengri, oneFive, game.Effective), tolerance)
+	assert.Less(t, SumProb(tengri, oneFive, game.Effective),
+		tengri.ProbBy(game.One, game.Effective)+tengri.ProbBy(game.Five, game.Effective),
+		"summing the effective columns would double the joker")
+
+	// Picking the joker itself alongside a pip does not count it twice either.
+	assert.InDelta(t, SumProb(tengri, oneFive, game.Effective),
+		SumProb(tengri, []game.Face{game.One, game.Five, game.Joker}, game.Effective), tolerance)
+
+	// Nothing picked totals nothing, rather than everything.
+	assert.Zero(t, SumProb(tengri, nil, game.Effective))
+}
+
+func TestSumColumnRanksByTheWholeSelection(t *testing.T) {
+	dice := parseFixture(t)
+	col := SumColumn([]game.Face{game.One, game.Five}, game.Literal)
+	assert.Equal(t, "Total", col.Title)
+	assert.Zero(t, col.Face, "the total is not a face, so it is never itself pickable")
+
+	SortBy(dice, col, true)
+	// Weighted die is "10 1 1 1 1 1": eleven of fifteen on the 1 and 5 faces,
+	// ahead of Favourable die's twelve of eighteen.
+	assert.Equal(t, "Weighted die", dice[0].Name)
+	assert.Equal(t, "73.3%", col.Value(dice[0]))
+	assert.Equal(t, "66.7%", col.Value(dice[1]))
+
+	// A selection of one ranks exactly as that face's own column does.
+	single := parseFixture(t)
+	SortBy(single, SumColumn([]game.Face{game.One}, game.Literal), true)
+	face := parseFixture(t)
+	SortBy(face, FaceColumn(game.One, game.Literal), true)
+	assert.Equal(t, names(face), names(single))
+}
+
+func TestMultiColumnsKeepTheTotalOnScreen(t *testing.T) {
+	cols := MultiColumns([]game.Face{game.One}, game.Literal)
+	assert.Equal(t, []string{"Name", "Total", "1", "2", "3", "4", "5", "6", "Joker"},
+		titles(cols), "the total sits second, where a narrow terminal cannot cut it off")
+
+	// The face columns still carry the faces the picking cursor moves over.
+	assert.Equal(t, game.One, cols[2].Face)
+	assert.Zero(t, cols[0].Face)
+	assert.Zero(t, cols[1].Face)
+
+	assert.Equal(t, []string{"Name", "Total", "1", "2", "3", "4", "5", "6"},
+		titles(MultiColumns([]game.Face{game.One}, game.Effective)))
+}
+
 func TestEveryColumnHasATint(t *testing.T) {
 	// A Column with no tint falls back to plain page colors, which would look
 	// like a bug rather than a decision. Every constructor must set one.
@@ -181,6 +242,8 @@ func TestEveryColumnHasATint(t *testing.T) {
 		"literal":   DefaultColumns(game.Literal),
 		"effective": DefaultColumns(game.Effective),
 		"weights":   WeightColumns(),
+		"multi":     MultiColumns([]game.Face{game.One, game.Five}, game.Literal),
+		"empty":     MultiColumns(nil, game.Effective),
 	}
 	for name, cols := range sets {
 		for _, c := range cols {

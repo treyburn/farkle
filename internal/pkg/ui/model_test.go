@@ -47,6 +47,16 @@ func sized(t *testing.T, w, h int) model {
 	return m
 }
 
+// stripANSI flattens a rendered view into one plain string, so a test can ask
+// what it says without minding how it is painted.
+func stripANSI(s string) string {
+	var b strings.Builder
+	for _, line := range strings.Split(s, "\n") {
+		b.WriteString(lipgloss.NewStyle().Render(line))
+	}
+	return b.String()
+}
+
 func titles(cols []Column) []string {
 	out := make([]string, len(cols))
 	for i, c := range cols {
@@ -77,11 +87,11 @@ func TestViewCycleWrapsAndIsExhaustive(t *testing.T) {
 }
 
 func TestColumnsPerView(t *testing.T) {
-	assert.Equal(t, []string{"Die", "1", "2", "3", "4", "5", "6", "Joker", "Total"},
+	assert.Equal(t, []string{"Name", "1", "2", "3", "4", "5", "6", "Joker", "Total"},
 		titles(columns(weights)))
-	assert.Equal(t, []string{"Die", "1", "2", "3", "4", "5", "6", "Joker"},
+	assert.Equal(t, []string{"Name", "1", "2", "3", "4", "5", "6", "Joker"},
 		titles(columns(literalOdds)))
-	assert.Equal(t, []string{"Die", "1", "2", "3", "4", "5", "6"},
+	assert.Equal(t, []string{"Name", "1", "2", "3", "4", "5", "6"},
 		titles(columns(effectiveOdds)),
 		"effective odds already count the joker into every pip")
 }
@@ -207,6 +217,142 @@ func TestKeysDriveTheTable(t *testing.T) {
 	assert.IsType(t, tea.QuitMsg{}, cmd())
 }
 
+func TestMultiSelectTotalsThePickedFaces(t *testing.T) {
+	m := sized(t, 140, 30)
+	m = m.sortOn(m.faceIndex(game.Five)) // the 5 column
+	require.Equal(t, game.Five, m.cols[m.sort].Face)
+
+	m, _ = press(t, m, "m")
+	require.True(t, m.multi)
+	assert.Equal(t, []string{"Name", "Total", "1", "2", "3", "4", "5", "6", "Joker"},
+		titles(m.cols))
+	// Nothing is picked for the player: which faces they are after is the
+	// question they came here to answer.
+	assert.Empty(t, m.picked.faces())
+	assert.Equal(t, sumColumn, m.sort, "multi-select is hard sorted on the total")
+	assert.True(t, m.desc, "best total first")
+
+	m.focus = m.faceIndex(game.Five)
+	m, _ = press(t, m, " ")
+	assert.Equal(t, []game.Face{game.Five}, m.picked.faces())
+
+	// Picking a second face widens the total rather than replacing it.
+	m.focus = m.faceIndex(game.One)
+	m, _ = press(t, m, " ")
+	assert.Equal(t, []game.Face{game.One, game.Five}, m.picked.faces())
+	assert.Equal(t, sumColumn, m.sort, "picking must not move the sort off the total")
+
+	faces := m.picked.faces()
+	for i := 1; i < len(m.dice); i++ {
+		assert.GreaterOrEqual(t,
+			SumProb(m.dice[i-1], faces, game.Literal),
+			SumProb(m.dice[i], faces, game.Literal),
+			"the dice are ordered by the total, not by either face alone")
+	}
+
+	// Picking the same face again takes it back out.
+	m, _ = press(t, m, " ")
+	assert.Equal(t, []game.Face{game.Five}, m.picked.faces())
+}
+
+func TestMultiSelectSpendsTheArrowKeysOnFaces(t *testing.T) {
+	m := sized(t, 140, 30)
+	m, _ = press(t, m, "m")
+	require.Equal(t, m.faceIndex(game.One), m.focus, "picking opens on the first face")
+
+	sorted := m.sort
+	m, _ = press(t, m, "right")
+	assert.Equal(t, game.Two, m.cols[m.focus].Face)
+	assert.Equal(t, sorted, m.sort, "the arrows move the picker, not the sort")
+
+	// The total is not a face, so stepping left off the first face stops
+	// rather than landing on it.
+	m, _ = press(t, m, "left")
+	m, _ = press(t, m, "left")
+	assert.Equal(t, game.One, m.cols[m.focus].Face)
+
+	// And the far end holds too.
+	for range len(m.cols) + 2 {
+		m, _ = press(t, m, "right")
+	}
+	assert.Equal(t, game.Joker, m.cols[m.focus].Face)
+
+	// Space is spent on picking here, so reversing has its own key.
+	desc := m.desc
+	m, _ = press(t, m, "r")
+	assert.Equal(t, !desc, m.desc)
+	assert.Equal(t, sumColumn, m.sort)
+}
+
+func TestMultiSelectStaysAmongTheOddsViews(t *testing.T) {
+	m := sized(t, 140, 30)
+	m = m.setView(weights)
+	m, _ = press(t, m, "m")
+	assert.Equal(t, literalOdds, m.view, "the weights view has no odds to total")
+
+	// Tab steps over the weights view rather than landing on a table with no
+	// total column in it.
+	for range len(views) + 1 {
+		m, _ = press(t, m, "tab")
+		require.NotEqual(t, weights, m.view)
+		require.Equal(t, "Total", m.cols[m.sort].Title)
+	}
+
+	// Under effective odds the joker has no column of its own, and the picker
+	// has to come off it rather than point past the end of the table.
+	m = m.setView(literalOdds)
+	m.focus = m.faceIndex(game.Joker)
+	m = m.setView(effectiveOdds)
+	assert.Less(t, m.focus, len(m.cols))
+	assert.True(t, m.cols[m.focus].Face.Valid())
+}
+
+func TestLeavingMultiSelectKeepsThePickedFace(t *testing.T) {
+	m := sized(t, 140, 30)
+	m, _ = press(t, m, "m")
+	m.focus = m.faceIndex(game.Six)
+	m, _ = press(t, m, " ")
+	require.Equal(t, []game.Face{game.Six}, m.picked.faces())
+
+	m, _ = press(t, m, "m")
+	require.False(t, m.multi)
+	assert.Equal(t, []string{"Name", "1", "2", "3", "4", "5", "6", "Joker"}, titles(m.cols))
+	// Dropping the total shifts every face one column left; the sort follows
+	// the face the picker was on rather than its old index.
+	assert.Equal(t, game.Six, m.cols[m.sort].Face)
+
+	// The selection survives the round trip, so stepping out to read one
+	// column and back does not cost it.
+	m, _ = press(t, m, "m")
+	assert.Equal(t, []game.Face{game.Six}, m.picked.faces())
+}
+
+func TestMultiSelectViewNamesWhatItTotals(t *testing.T) {
+	m := sized(t, 140, 30)
+	m, _ = press(t, m, "m")
+
+	// The mode opens empty, and has to say so rather than showing a column of
+	// silent zeroes with no explanation for them.
+	assert.Contains(t, stripANSI(m.View()), "No faces picked")
+
+	m.picked = picks{}.toggle(game.One).toggle(game.Five)
+	m = m.retable()
+	out := stripANSI(m.View())
+	assert.Contains(t, out, "(•) multi-select")
+	assert.Contains(t, out, "( ) single column", "the selector shows the mode m goes back to")
+	assert.Contains(t, out, "a 1 or a 5", "the blurb has to say what the total is a chance of")
+	assert.Contains(t, out, "•1", "a picked column is marked in the header")
+	assert.Contains(t, out, "space pick")
+
+	m = m.setView(effectiveOdds)
+	assert.Contains(t, stripANSI(m.View()), "joker counts once")
+
+	off, _ := press(t, m, "m")
+	out = stripANSI(off.View())
+	assert.Contains(t, out, "(•) single column")
+	assert.Contains(t, out, "( ) multi-select")
+}
+
 func TestWindowResizeIsHonoured(t *testing.T) {
 	m := sized(t, 100, 30)
 	next, _ := m.Update(tea.WindowSizeMsg{Width: 64, Height: 20})
@@ -231,13 +377,15 @@ func TestViewFillsTheScreenExactly(t *testing.T) {
 	for _, w := range []int{200, 120, 80, 60, 40, 20} {
 		for _, h := range []int{60, 30, 18, 13, 12, 8, 1} {
 			for _, v := range views {
-				m := sized(t, w, h)
-				m = m.setView(v)
-				lines := strings.Split(m.View(), "\n")
-				require.Len(t, lines, h, "w=%d h=%d v=%v", w, h, v)
-				for i, line := range lines {
-					require.Equal(t, w, lipgloss.Width(line),
-						"w=%d h=%d v=%v line %d", w, h, v, i)
+				for _, multi := range []bool{false, true} {
+					m := sized(t, w, h)
+					m = m.setView(v).setMulti(multi)
+					lines := strings.Split(m.View(), "\n")
+					require.Len(t, lines, h, "w=%d h=%d v=%v multi=%v", w, h, v, multi)
+					for i, line := range lines {
+						require.Equal(t, w, lipgloss.Width(line),
+							"w=%d h=%d v=%v multi=%v line %d", w, h, v, multi, i)
+					}
 				}
 			}
 		}
@@ -245,20 +393,22 @@ func TestViewFillsTheScreenExactly(t *testing.T) {
 }
 
 func TestViewShowsWhatTheModeSays(t *testing.T) {
-	strip := func(s string) string {
-		var b strings.Builder
-		for _, line := range strings.Split(s, "\n") {
-			b.WriteString(lipgloss.NewStyle().Render(line))
-		}
-		return b.String()
-	}
 	for _, v := range views {
-		m := sized(t, 120, 30)
-		m = m.setView(v)
-		out := strip(m.View())
-		assert.Contains(t, out, v.String(), "the selector should name every mode")
-		assert.Contains(t, out, v.blurb(), "the blurb should explain the live mode")
-		assert.Contains(t, out, "(•) "+v.String(), "the live mode should be the filled one")
+		for _, multi := range []bool{false, true} {
+			m := sized(t, 120, 30).setView(v).setMulti(multi)
+			out := stripANSI(m.View())
+			assert.Contains(t, out, m.view.String(), "the selector should name every view")
+			assert.Contains(t, out, "(•) "+m.view.String(), "the live view should be filled in")
+
+			// Both selectors keep their explanation up whatever the other one
+			// is doing, so neither is ever left for the reader to guess at.
+			assert.Contains(t, out, m.view.blurb(), "v=%v multi=%v", v, multi)
+			assert.Contains(t, out, m.modeBlurb(), "v=%v multi=%v", v, multi)
+			assert.NotEmpty(t, m.modeBlurb())
+
+			// And the sort closes the banner rather than trailing a selector.
+			assert.Contains(t, out, "sorted by "+m.cols[m.sort].Title)
+		}
 	}
 }
 

@@ -64,6 +64,24 @@ func headerStyle(sorted bool) lipgloss.Style {
 	return s.Foreground(subtext0)
 }
 
+// pickHeaderStyle renders a face column's title while multi-select is on.
+//
+// Two things have to be legible at once: which faces the total counts, and
+// which column the arrow keys are on. The cursor takes a filled chip, the same
+// shape the sorted column wears, in lavender rather than mauve so the two
+// never read as the same thing; a picked column that is not under the cursor
+// keeps that lavender as its text.
+func pickHeaderStyle(picked, cursor bool) lipgloss.Style {
+	s := lipgloss.NewStyle().Background(base)
+	switch {
+	case cursor:
+		return s.Foreground(base).Background(lavender).Bold(true)
+	case picked:
+		return s.Foreground(lavender).Bold(true)
+	}
+	return s.Foreground(subtext0)
+}
+
 // nameStyle renders a die's name.
 func nameStyle(selected bool) lipgloss.Style {
 	return lipgloss.NewStyle().Foreground(lavender).Background(rowBG(selected))
@@ -104,13 +122,26 @@ func zeroFG(selected bool) lipgloss.Color {
 // probStyle renders a probability, tinted by how it compares to a fair die: a
 // face the die never rolls recedes, one it favours warms up.
 func probStyle(p float64, selected bool) lipgloss.Style {
+	return heatStyle(p, uniform, selected)
+}
+
+// sumStyle renders a total over n picked faces. A sum is read against what a
+// fair die would give those n faces between them rather than against a single
+// face's share, so picking a second face does not turn the whole column warm.
+func sumStyle(p float64, n int, selected bool) lipgloss.Style {
+	return heatStyle(p, float64(n)*uniform, selected)
+}
+
+// heatStyle renders p against the mid it should be read as ordinary at: below
+// runs cool, above runs warm, and nothing at all recedes.
+func heatStyle(p, mid float64, selected bool) lipgloss.Style {
 	s := lipgloss.NewStyle().Background(rowBG(selected))
 	switch {
 	case p == 0:
 		return s.Foreground(zeroFG(selected))
-	case p < uniform-0.01:
+	case p < mid-0.01:
 		return s.Foreground(blue)
-	case p > uniform+0.01:
+	case p > mid+0.01:
 		return s.Foreground(peach)
 	}
 	return s.Foreground(text)
