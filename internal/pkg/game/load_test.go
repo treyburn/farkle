@@ -31,11 +31,11 @@ func TestParseSkipsBadEntries(t *testing.T) {
 
 	// Every rejection reason should be named, so a reader of the log can tell
 	// which entry failed and why.
-	assert.ErrorContains(t, err, "Mismatched die")
-	assert.ErrorContains(t, err, "Weightless die")
-	assert.ErrorContains(t, err, "Out of range die")
-	assert.ErrorContains(t, err, "Unidentified die")
-	assert.ErrorContains(t, err, "not-a-uuid")
+	assert.Contains(t, err.Error(), "Mismatched die")
+	assert.Contains(t, err.Error(), "Weightless die")
+	assert.Contains(t, err.Error(), "Out of range die")
+	assert.Contains(t, err.Error(), "Unidentified die")
+	assert.Contains(t, err.Error(), "not-a-uuid")
 
 	assert.Equal(t, uuid.MustParse(idGood), dice[0].ID)
 	assert.Equal(t, uuid.MustParse(idAlsoGood), dice[1].ID)
