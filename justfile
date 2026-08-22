@@ -1,6 +1,10 @@
-# Run the test suite
+# Run the test suite with the race detector and per-package coverage
 test:
-    go test ./...
+    go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+# Open the coverage profile from `just test` in a browser
+cover: test
+    go tool cover -html=coverage.txt
 
 # Format the code
 fmt:
