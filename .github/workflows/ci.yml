@@ -30,6 +30,11 @@ jobs:
         run: go vet ./...
       - name: Test
         run: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.txt
   lint:
     runs-on: ubuntu-slim
     steps:
