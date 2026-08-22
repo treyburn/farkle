@@ -13,7 +13,9 @@
 // The dice come from the game's own item.xml, extracted by the nushell pipeline
 // documented in the README and written to data/dice.json. Each die carries the
 // game's UUID, so [Die.ID] identifies a die across a regenerated dice.json or a
-// patch that reorders the source. The extraction collapses one duplicate pair
+// patch that reorders the source. It is parsed and validated at load, so an
+// entry whose Id is not a well-formed UUID is rejected like any other malformed
+// row. The extraction collapses one duplicate pair
 // (the quest and non-quest Lucky die), so display names happen to be unique
 // today; nothing here relies on that.
 //

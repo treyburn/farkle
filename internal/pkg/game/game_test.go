@@ -9,10 +9,10 @@ import (
 // fixture covers the awkward shapes in the real data: trailing whitespace, a
 // zero-weight side, a joker face, and a typographic apostrophe.
 const fixture = `[
-  {"Id": "id-ordinary", "SideWeights": "1 1 1 1 1 1", "SideValues": "0 1 2 3 4 5", "DisplayName": "Ordinary die"},
-  {"Id": "id-favourable", "SideWeights": "6 0 1 1 6 4", "SideValues": "0 1 2 3 4 5", "DisplayName": "Favourable die"},
-  {"Id": "id-tengri", "SideWeights": "2 1 1 1 1 1 ", "SideValues": "6 1 2 3 4 5 ", "DisplayName": "Tengri’s die"},
-  {"Id": "id-weighted", "SideWeights": "10 1 1 1 1 1", "SideValues": "0 1 2 3 4 5", "DisplayName": "Weighted die"}
+  {"Id": "00000000-0000-4000-8000-00000000000a", "SideWeights": "1 1 1 1 1 1", "SideValues": "0 1 2 3 4 5", "DisplayName": "Ordinary die"},
+  {"Id": "00000000-0000-4000-8000-00000000000b", "SideWeights": "6 0 1 1 6 4", "SideValues": "0 1 2 3 4 5", "DisplayName": "Favourable die"},
+  {"Id": "00000000-0000-4000-8000-00000000000c", "SideWeights": "2 1 1 1 1 1 ", "SideValues": "6 1 2 3 4 5 ", "DisplayName": "Tengri’s die"},
+  {"Id": "00000000-0000-4000-8000-00000000000d", "SideWeights": "10 1 1 1 1 1", "SideValues": "0 1 2 3 4 5", "DisplayName": "Weighted die"}
 ]`
 
 func parseFixture(t *testing.T) []Die {

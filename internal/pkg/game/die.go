@@ -1,5 +1,7 @@
 package game
 
+import "uuid"
+
 // Side pairs a face with the weight the game gives it. Weights are relative to
 // the die's own total, not to a fixed scale, so a weight is only meaningful
 // alongside Die.TotalWeight.
@@ -14,7 +16,7 @@ type Die struct {
 	// ID is the game's own UUID for the die. It survives regenerating
 	// dice.json and any reordering a game patch introduces, so it identifies a
 	// die more durably than a display name or a load-order index.
-	ID    string
+	ID    uuid.UUID
 	Name  string
 	Sides []Side
 
@@ -67,7 +69,7 @@ func (d Die) HasJoker() bool { return d.probs[Joker] > 0 }
 
 // newDie builds a Die from validated sides, precomputing the face
 // probabilities so every later query is an array lookup.
-func newDie(id, name string, sides []Side, total int) Die {
+func newDie(id uuid.UUID, name string, sides []Side, total int) Die {
 	d := Die{ID: id, Name: name, Sides: sides, total: total}
 	for _, s := range sides {
 		d.probs[s.Face] += float64(s.Weight) / float64(total)

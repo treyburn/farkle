@@ -8,6 +8,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"uuid"
 )
 
 // rawDie mirrors the shape of dice.json, where both the weights and the face
@@ -32,7 +33,7 @@ func Parse(data []byte) ([]Die, error) {
 	}
 
 	dice := make([]Die, 0, len(raws))
-	seen := make(map[string]string, len(raws))
+	seen := make(map[uuid.UUID]string, len(raws))
 	var errs []error
 	for i, r := range raws {
 		d, err := r.toDie()
@@ -71,9 +72,13 @@ func LoadFile(path string) ([]Die, error) {
 }
 
 func (r rawDie) toDie() (Die, error) {
-	id := strings.TrimSpace(r.ID)
-	if id == "" {
+	raw := strings.TrimSpace(r.ID)
+	if raw == "" {
 		return Die{}, errors.New("no Id")
+	}
+	id, err := uuid.Parse(raw)
+	if err != nil {
+		return Die{}, fmt.Errorf("Id %q: %w", raw, err)
 	}
 
 	weights, err := parseInts(r.SideWeights)
