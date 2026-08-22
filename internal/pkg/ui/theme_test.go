@@ -106,13 +106,13 @@ func TestWordmarkRowsStayAligned(t *testing.T) {
 	require.NotEmpty(t, m[0])
 	// The gradient steps by character position, so the rows must be the same
 	// length or the colors will not line up vertically.
-	assert.Equal(t, len([]rune(m[0])), len([]rune(m[1])))
-	assert.Equal(t, len([]rune(m[1])), len([]rune(m[2])))
+	assert.Len(t, []rune(m[1]), len([]rune(m[0])))
+	assert.Len(t, []rune(m[2]), len([]rune(m[1])))
 
 	// Every glyph is square too, which is what keeps that true for any word.
 	for r, g := range blockFont {
-		assert.Equal(t, len([]rune(g[0])), len([]rune(g[1])), "glyph %q", r)
-		assert.Equal(t, len([]rune(g[1])), len([]rune(g[2])), "glyph %q", r)
+		assert.Len(t, []rune(g[1]), len([]rune(g[0])), "glyph %q", r)
+		assert.Len(t, []rune(g[2]), len([]rune(g[1])), "glyph %q", r)
 	}
 }
 

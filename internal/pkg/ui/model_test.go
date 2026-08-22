@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/charmbracelet/lipgloss"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -277,8 +278,8 @@ func TestPadFitsExactly(t *testing.T) {
 	// columns out of line.
 	assert.Equal(t, "abcde", pad("abcdefgh", 5, true))
 	// Counted in runes, not bytes: the die names carry typographic apostrophes.
-	assert.Equal(t, 5, len([]rune(pad("Tengri’s", 5, true))))
-	assert.Equal(t, 5, len([]rune(pad("’", 5, false))))
+	assert.Len(t, []rune(pad("Tengri’s", 5, true)), 5)
+	assert.Len(t, []rune(pad("’", 5, false)), 5)
 }
 
 func TestFitSquaresOffALine(t *testing.T) {
