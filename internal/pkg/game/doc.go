@@ -6,12 +6,14 @@
 //
 //   - face.go - the Face enum, including Joker, and the raw index decode.
 //   - die.go  - Side and Die, with per-face probabilities precomputed at load.
-//   - load.go - reading dice.json into []Die.
+//   - load.go - decoding dice.json into []Die.
 //
 // # Data
 //
 // The dice come from the game's own item.xml, extracted by the nushell pipeline
-// documented in the README and written to data/dice.json. Each die carries the
+// documented in the README and written to data/dice.json, which is embedded
+// into the binary. [Dice] is the normal entry point; nothing here reads from
+// disk at runtime. Each die carries the
 // game's UUID, so [Die.ID] identifies a die across a regenerated dice.json or a
 // patch that reorders the source. It is parsed and validated at load, so an
 // entry whose Id is not a well-formed UUID is rejected like any other malformed

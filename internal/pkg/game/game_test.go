@@ -2,7 +2,6 @@ package game
 
 import (
 	"math"
-	"os"
 	"testing"
 )
 
@@ -33,14 +32,9 @@ func closeTo(got, want float64) bool { return math.Abs(got-want) < 1e-9 }
 // extraction pipeline in the README collapses the one duplicate pair, so names
 // are expected to be unique here even though the source XML has 44 entries.
 func TestRealData(t *testing.T) {
-	const path = "../../../data/dice.json"
-	if _, err := os.Stat(path); err != nil {
-		t.Skipf("no dice.json: %v", err)
-	}
-
-	dice, err := LoadFile(path)
+	dice, err := Dice()
 	if err != nil {
-		t.Fatalf("LoadFile: %v", err)
+		t.Fatalf("Dice: %v", err)
 	}
 	if len(dice) == 0 {
 		t.Fatal("no dice parsed")

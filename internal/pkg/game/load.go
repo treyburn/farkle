@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io"
-	"os"
 	"strconv"
 	"strings"
 	"uuid"
+
+	"go.treyburn.dev/farkle/data"
 )
 
 // rawDie mirrors the shape of dice.json, where both the weights and the face
@@ -53,22 +53,17 @@ func Parse(data []byte) ([]Die, error) {
 	return dice, errors.Join(errs...)
 }
 
-// Load reads and parses dice.json from r.
-func Load(r io.Reader) ([]Die, error) {
-	data, err := io.ReadAll(r)
+// Dice parses the embedded dice.json.
+//
+// This is the normal way to get the game's dice. Parse stays exported for
+// callers that have their own bytes, such as a newer dump extracted after a
+// game patch.
+func Dice() ([]Die, error) {
+	dice, err := Parse(data.DiceJSON)
 	if err != nil {
-		return nil, fmt.Errorf("read dice: %w", err)
+		return dice, fmt.Errorf("embedded dice.json: %w", err)
 	}
-	return Parse(data)
-}
-
-// LoadFile reads and parses dice.json from disk.
-func LoadFile(path string) ([]Die, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("read %s: %w", path, err)
-	}
-	return Parse(data)
+	return dice, nil
 }
 
 func (r rawDie) toDie() (Die, error) {
