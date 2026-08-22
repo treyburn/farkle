@@ -1,6 +1,16 @@
 # farkle
 A TUI for interactive dice roll tables in KCD2's farkle minigame.
 
+## Setup
+
+### Required Tools for Development
+The following tools are required for developing of this repo:
+
+- [Golang](https://go.dev/dl/)
+- [Nushell](https://www.nushell.sh/book/installation.html)
+- [Just](https://just.systems/man/en/installation.html)
+- [Golangci-lint](https://golangci-lint.run/docs/welcome/install/local/)
+
 ## Data Processing
 ### Data Exploration
 KCD2 stores it's data files under `{STEAM_DIR}/steamapps/common/KingdomComeDeliverance2/Data` with the extension of `.pak`.
