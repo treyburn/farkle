@@ -15,7 +15,6 @@ linters:
     - embeddedstructfieldcheck
     - errname
     - errorlint
-    - errorlint
     - exhaustive
     - exptostd
     - gocognit
@@ -86,7 +85,8 @@ formatters:
       custom-order: true
     gofumpt:
       module-path: go.treyburn.dev/farkle
-      extra-rules: true
+      extra:
+        group-params: true
     goimports:
       local-prefixes:
         - go.treyburn.dev/farkle
