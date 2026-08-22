@@ -13,6 +13,22 @@ The following tools are required for developing of this repo:
 
 It can be helpful to use [mise](https://mise.jdx.dev/) for managing versioned dependencies that tend tro differ across repos like golangci-lint.
 
+### Updating Tool Versions
+If you update the version of a tool in use (such as `golangci-lint`) then be sure to update the [mise.toml](mise.toml) as our CI will leverage that.
+
+If you are using `mise` - then you can use the following commands:
+```shell
+# explicit version change
+mise use golangci-lint@2.14.0
+
+# bump everything to latest within what your pin allows
+mise upgrade --bump
+
+# check for outdated deps
+mise outdated             # what's behind, and what's available 
+mise latest golangci-lint # newest version that exists
+```
+
 ## Data Processing
 ### Data Exploration
 KCD2 stores it's data files under `{STEAM_DIR}/steamapps/common/KingdomComeDeliverance2/Data` with the extension of `.pak`.
