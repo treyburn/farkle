@@ -20,6 +20,10 @@ import (
 type Column struct {
 	Title string
 	Width int
+	// Face is the die face this column reports, or the zero Face where the
+	// column is not about one - the name and total columns. Multi-select picks
+	// columns by face, so a column has to say which one it speaks for.
+	Face game.Face
 	// Value renders d's cell.
 	Value func(d game.Die) string
 	// Less orders ascending. SortBy inverts it for descending order.
@@ -41,7 +45,7 @@ func (c Column) style(d game.Die, selected bool) lipgloss.Style {
 // NameColumn is the die's display name.
 func NameColumn() Column {
 	return Column{
-		Title: "Die",
+		Title: "Name",
 		Width: 24,
 		Value: func(d game.Die) string { return d.Name },
 		Less:  func(a, b game.Die) bool { return foldName(a.Name) < foldName(b.Name) },
@@ -54,6 +58,7 @@ func FaceColumn(f game.Face, mode game.ProbMode) Column {
 	return Column{
 		Title: f.String(),
 		Width: 7,
+		Face:  f,
 		Value: func(d game.Die) string { return FormatPct(d.ProbBy(f, mode)) },
 		Less:  func(a, b game.Die) bool { return a.ProbBy(f, mode) < b.ProbBy(f, mode) },
 		tint: func(d game.Die, selected bool) lipgloss.Style {
@@ -73,6 +78,7 @@ func WeightColumn(f game.Face) Column {
 		// column. That keeps the weights view, which carries an extra total
 		// column, inside an 80-column terminal.
 		Width: 5,
+		Face:  f,
 		Value: func(d game.Die) string { return strconv.Itoa(FaceWeight(d, f)) },
 		Less:  func(a, b game.Die) bool { return FaceWeight(a, f) < FaceWeight(b, f) },
 		// Tinted by the face's share of the die rather than by the weight
@@ -94,6 +100,56 @@ func TotalColumn() Column {
 		Less:  func(a, b game.Die) bool { return a.TotalWeight() < b.TotalWeight() },
 		tint:  func(_ game.Die, selected bool) lipgloss.Style { return totalStyle(selected) },
 	}
+}
+
+// SumProb is the chance d rolls any one of faces, counted according to mode.
+//
+// A roll shows one face, so the faces being distinct is what lets their
+// literal chances simply add. Under [game.Effective] a joker stands in for any
+// pip picked - but it is counted once rather than once per pip, since that one
+// roll cannot be two faces at a time. Adding ProbBy across the faces instead
+// would fold the joker in once per face and report odds no die has.
+func SumProb(d game.Die, faces []game.Face, mode game.ProbMode) float64 {
+	var sum float64
+	wild := false
+	for _, f := range faces {
+		sum += d.Prob(f)
+		wild = wild || (mode == game.Effective && f != game.Joker)
+	}
+	if wild && !slices.Contains(faces, game.Joker) {
+		sum += d.Prob(game.Joker)
+	}
+	return sum
+}
+
+// SumColumn is the chance of rolling any of faces - the column multi-select
+// exists for. It has no Face of its own, so it is never itself pickable.
+func SumColumn(faces []game.Face, mode game.ProbMode) Column {
+	picked := slices.Clone(faces)
+	sum := func(d game.Die) float64 { return SumProb(d, picked, mode) }
+	return Column{
+		Title: "Total",
+		Width: 7,
+		Value: func(d game.Die) string { return FormatPct(sum(d)) },
+		Less:  func(a, b game.Die) bool { return sum(a) < sum(b) },
+		tint: func(d game.Die, selected bool) lipgloss.Style {
+			return sumStyle(sum(d), len(picked), selected)
+		},
+	}
+}
+
+// MultiColumns is the name column, the total over faces, then one column per
+// face.
+//
+// The total sits second rather than last so that it survives a narrow
+// terminal: the face columns are there to show what went into it, but the
+// total is the number the mode was entered for, and a column cut off the right
+// edge would be no use at all.
+func MultiColumns(faces []game.Face, mode game.ProbMode) []Column {
+	cols := DefaultColumns(mode)
+	out := make([]Column, 0, len(cols)+1)
+	out = append(out, cols[0], SumColumn(faces, mode))
+	return append(out, cols[1:]...)
 }
 
 // FaceWeight is the weight d puts on f, summed over every side showing it. The
