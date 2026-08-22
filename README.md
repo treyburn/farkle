@@ -47,11 +47,13 @@ let dice = (
     | get attributes
 )
 
+let die_names = ($dice | get UIName)
+
 let ui_map = (
     open ./data/text_ui_items.xml
     | get content
-    | where {|row| $row.content.0.content.0.content | str contains -i 'die'}
     | get content
+    | where {|row| $row.0.content.0.content in $die_names}
     | each {|row| {
         UIName: $row.0.content.0.content
         DisplayName: $row.2.content.0.content
@@ -64,7 +66,7 @@ $dice
 | save -f ./data/dice.json
 ```
 
-Additionally, it turns out that items which originate in DLC (including dice) are stored in yet another xml file: `item__dlc.xml`. Thankfully it has the same layout as the standard `item.xml` - but we need to union those results in. `nu` to the rescue yet again.
+Additionally, it turns out that items which originate in DLC (including dice) are stored in yet another xml file: `item__dlc.xml`. Thankfully it has the same layout as the standard `item.xml` - but we need to union those results in. Also I realized we had a single instance of a duplicated dice. `nu` to the rescue yet again.
 
 ```nu
 let dice = (
@@ -81,20 +83,28 @@ let dlc_dice = (
     | get attributes
 )
 
+# Quest item flag is useful if we need to de-dupe identical dice - like in the case with Lucky Die.
+let all_dice = ($dice | append $dlc_dice | default "false" IsQuestItem)
+let die_names = ($all_dice | get UIName)
+
 let ui_map = (
     open ./data/text_ui_items.xml
     | get content
-    | where {|row| $row.content.0.content.0.content | str contains -i 'die'}
     | get content
+    | where {|row| $row.0.content.0.content in $die_names}
     | each {|row| {
         UIName: $row.0.content.0.content
         DisplayName: $row.2.content.0.content
       }}
 )
 
-$dice 
-| append $dlc_dice
+$all_dice
 | join $ui_map UIName
-| select SideWeights SideValues DisplayName
+# There are 2 instances of LuckyDie in the game. They are identical in states but one is a quest item and the other is not.
+# Instead of having those dupliace - I choose to collapse them into a single result.
+| group-by {|r| $"($r.DisplayName)|($r.Price)|($r.SideWeights | str trim)|($r.SideValues | str trim)"}
+| values
+| each {|g| $g | sort-by IsQuestItem | first}
+| select Id SideWeights SideValues DisplayName
 | save -f ./data/dice.json
 ```
