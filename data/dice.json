@@ -1,215 +1,258 @@
 [
   {
+    "Id": "6a479d81-e642-40b3-92ad-0e43793f8c66",
     "SideWeights": "6 1 6 1 6 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Aranka's die"
   },
   {
+    "Id": "5ca4ea9d-a556-4051-a90e-ad645eb16b80",
     "SideWeights": "1 3 2 2 2 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Unlucky die"
   },
   {
+    "Id": "329d2697-b6d2-452d-9ba9-09649a607740",
     "SideWeights": "3 1 6 1 1 3",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Saint Antiochus' die"
   },
   {
+    "Id": "aa0b6bc8-e7f6-4777-b931-1ae81d7ef8da",
     "SideWeights": "2 1 1 1 1 3",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Shrinking die"
   },
   {
+    "Id": "a671d0f9-f52e-48e9-a5cf-d51c8765f89d",
     "SideWeights": "1 1 1 1 1 1",
     "SideValues": "6 1 2 3 4 5",
     "DisplayName": "Balatro's die"
   },
   {
+    "Id": "fd2e7345-5584-49d1-a0f9-e69c51d2bdf0",
     "SideWeights": "3 1 1 1 6 3",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Painted die"
   },
   {
+    "Id": "6f0c9c31-474f-4254-9dd6-2ab54fb87060",
     "SideWeights": "3 3 3 3 3 6",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Ci die"
   },
   {
+    "Id": "c4f01ba9-3b75-47e6-81b8-f4da7f58a416",
     "SideWeights": "8 8 1 1 1 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Monk's die"
   },
   {
+    "Id": "9a9d9c0d-2c94-475d-ab72-75b8ced9ac05",
     "SideWeights": "1 1 1 1 1 1",
     "SideValues": "6 1 2 3 4 5",
     "DisplayName": "Devil's head die"
   },
   {
+    "Id": "3844bfed-e66b-4e97-bea4-4bf84d90ae82",
     "SideWeights": "2 8 2 8 2 8",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Even die"
   },
   {
+    "Id": "bd819743-3e32-474e-8333-bebe92b16e98",
     "SideWeights": "6 0 1 1 6 4",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Favourable die"
   },
   {
+    "Id": "8ee58bb4-d928-4caf-9246-9a4706299543",
     "SideWeights": "2 3 2 3 7 3",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Lousy gambler's die"
   },
   {
+    "Id": "23e4412b-10fe-49eb-aba0-734a121cef67",
     "SideWeights": "5 3 2 3 5 3",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Cautious cheater's die"
   },
   {
+    "Id": "4ede7cfe-e698-4917-a092-a01d8ac3646f",
     "SideWeights": "4 5 7 1 1 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Holy Trinity die"
   },
   {
+    "Id": "8895b262-ddfb-4392-a784-eee616798c96",
     "SideWeights": "7 2 2 2 2 4",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Heavenly Kingdom die"
   },
   {
+    "Id": "ba357fbc-ba9b-46d1-a743-b31842cd9fd4",
     "SideWeights": "6 1 3 3 0 0",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Pie die"
   },
   {
+    "Id": "5a9e23d3-e8dc-4eb7-9805-3bd2fa6d8351",
     "SideWeights": "4 6 7 8 4 3",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "King's die"
   },
   {
+    "Id": "75a0739e-fa75-4f99-be68-e1c3ba30d57e",
     "SideWeights": "3 3 3 3 3 6",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Lu die"
   },
   {
+    "Id": "1bd8d5d2-f57e-48c8-8f82-df7ae1ea90d3",
     "SideWeights": "6 1 2 3 4 6",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Lucky die"
   },
   {
-    "SideWeights": "6 1 2 3 4 6",
-    "SideValues": "0 1 2 3 4 5",
-    "DisplayName": "Lucky die"
-  },
-  {
+    "Id": "11834cfd-bd67-41d8-8fe7-503f5076fa1d",
     "SideWeights": "4 5 6 7 1 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Mathematician's die"
   },
   {
+    "Id": "65ccc0cd-de18-4305-9d64-42bb3c6d8d30",
     "SideWeights": "1 1 1 1 1 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Ordinary die"
   },
   {
+    "Id": "4c465f33-a20e-4428-b2f5-09cfc6c4f6d7",
     "SideWeights": "8 2 8 2 8 2",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Odd die"
   },
   {
+    "Id": "b8c8b160-9c66-4484-ae36-e775b39e4191",
     "SideWeights": "1 1 1 1 1 1 ",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "St. Stephen's die"
   },
   {
+    "Id": "1b1345f6-75c0-4477-b6d7-b9d73ec9d9f0",
     "SideWeights": "1 1 1 1 1 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Hugo's die"
   },
   {
+    "Id": "4306e2d9-f09b-444a-b05d-79c55449ef46",
     "SideWeights": "4 2 2 2 3 3",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Strip die"
   },
   {
+    "Id": "dccf7f80-e965-4666-957c-dbf975381fff",
     "SideWeights": "1 1 1 1 1 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Molar die"
   },
   {
+    "Id": "55cc9e0d-63b4-491f-a74c-098654f58e61",
     "SideWeights": "1 1 1 1 1 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Premolar die"
   },
   {
+    "Id": "3a6e12fe-a494-4a34-85a9-ebdf4f1d3a14",
     "SideWeights": "1 1 1 1 1 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Wisdom tooth die"
   },
   {
+    "Id": "6bfa4927-3af4-4871-8ecb-b3b2bf13cecb",
     "SideWeights": "2 1 1 1 1 1 ",
     "SideValues": "6 1 2 3 4 5 ",
     "DisplayName": "Tengri’s die"
   },
   {
+    "Id": "06d3757e-2882-4d75-99f9-1008a4e9d2d1",
     "SideWeights": "3 4 1 1 2 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Unbalanced die"
   },
   {
+    "Id": "b41171bf-9332-44ce-96fa-7e64d6e5e92a",
     "SideWeights": "1 5 5 5 5 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Die of misfortune"
   },
   {
+    "Id": "1c1c88ca-61dd-4b64-965a-fd1e9a840364",
     "SideWeights": "1 5 6 2 2 2",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Wagoner's die"
   },
   {
+    "Id": "d9207a2d-9c94-4669-816f-a83186367392",
     "SideWeights": "1 3 2 2 2 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Painter's die B"
   },
   {
+    "Id": "62bb62c7-8200-4cda-967e-02ee22c95caa",
     "SideWeights": "1 3 2 2 2 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Painter's die G"
   },
   {
+    "Id": "1c3a6424-dfcf-4d34-b33f-d22b055d944b",
     "SideWeights": "1 3 2 2 2 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Painter's die R"
   },
   {
+    "Id": "f8e3162a-dff1-4099-a60f-05be4e40f7ca",
     "SideWeights": "10 1 1 1 1 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Weighted die"
   },
   {
+    "Id": "86b7cd9f-2d1e-4e0d-8267-c5850a71d877",
+    "SideWeights": "3 1 1 1 3 3",
+    "SideValues": "0 1 2 3 4 5",
+    "DisplayName": "Mother-of-pearl die"
+  },
+  {
+    "Id": "b43b8e5b-4891-48ce-a39f-143956862c96",
     "SideWeights": "3 3 3 3 3 6",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Fer die"
   },
   {
+    "Id": "93e67a15-6545-46d3-8820-87fd690e1f0d",
     "SideWeights": "3 2 3 2 3 4",
     "SideValues": "0 1 2 3 4 5 ",
     "DisplayName": "Greasy die"
   },
   {
+    "Id": "8ab8d048-2ca7-4bb4-a0d4-963555750bc9",
     "SideWeights": "1 5 1 1 7 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Grimy die"
   },
   {
+    "Id": "1f610871-6df4-4c86-a5a2-4df8dc6500df",
     "SideWeights": "6 6 1 1 6 3",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Sad Greaser's die"
   },
   {
+    "Id": "85e24c29-d5b7-4792-89e4-19350e3e14ac",
     "SideWeights": "2 1 4 1 2 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Trinity die"
   },
   {
+    "Id": "c57c2cb4-5d16-4fbe-a55c-db20dd740efe",
     "SideWeights": "1 10 1 1 1 1",
     "SideValues": "0 1 2 3 4 5",
     "DisplayName": "Grozav's lucky die"
