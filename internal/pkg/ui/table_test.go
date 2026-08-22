@@ -99,3 +99,93 @@ func TestFormatPct(t *testing.T) {
 	assert.Equal(t, "16.7%", FormatPct(1.0/6.0))
 	assert.Equal(t, "100.0%", FormatPct(1))
 }
+
+func TestFaceWeightSumsRepeatedFaces(t *testing.T) {
+	dice, err := game.Parse([]byte(`[
+  {"Id": "00000000-0000-4000-8000-00000000000e", "SideWeights": "3 4 1 1 1 1", "SideValues": "0 0 2 3 4 5", "DisplayName": "Double one die"}
+]`))
+	require.NoError(t, err)
+	require.Len(t, dice, 1)
+
+	// Two sides show a 1, so the face is worth both of their weights.
+	assert.Equal(t, 7, FaceWeight(dice[0], game.One))
+	assert.Equal(t, 0, FaceWeight(dice[0], game.Two))
+	assert.Equal(t, 11, dice[0].TotalWeight())
+}
+
+func TestWeightColumnsShowRawWeights(t *testing.T) {
+	dice := parseFixture(t)
+	cols := WeightColumns()
+	require.Len(t, cols, len(game.Pips)+3)
+	assert.Equal(t, "Total", cols[len(cols)-1].Title)
+
+	// The fixture's Weighted die is "10 1 1 1 1 1", so its 1 face is worth 10
+	// of a total of 15 - reported as the integers, not as a percentage.
+	var weighted game.Die
+	for _, d := range dice {
+		if d.Name == "Weighted die" {
+			weighted = d
+		}
+	}
+	require.NotZero(t, weighted.TotalWeight())
+	assert.Equal(t, "10", cols[1].Value(weighted))
+	assert.Equal(t, "15", cols[len(cols)-1].Value(weighted))
+}
+
+func TestSortByWeightMatchesSortByProb(t *testing.T) {
+	// Within one die a weight and its probability differ only by the die's
+	// total, but across dice with different totals they can disagree. Sorting
+	// by weight must follow the weights.
+	byWeight := parseFixture(t)
+	SortBy(byWeight, WeightColumn(game.One), true)
+	assert.Equal(t, "Weighted die", byWeight[0].Name, "weight 10 beats weight 6")
+
+	byProb := parseFixture(t)
+	SortBy(byProb, FaceColumn(game.One, game.Literal), true)
+	assert.Equal(t, "Weighted die", byProb[0].Name)
+
+	// Total orders by the denominator, which the probability columns hide.
+	SortBy(byWeight, TotalColumn(), false)
+	assert.Equal(t, []string{
+		"Ordinary die", "Tengri’s die", "Weighted die", "Favourable die",
+	}, names(byWeight))
+}
+
+func TestDefaultColumnsDropJokerWhenEffective(t *testing.T) {
+	titles := func(cols []Column) []string {
+		out := make([]string, len(cols))
+		for i, c := range cols {
+			out[i] = c.Title
+		}
+		return out
+	}
+
+	assert.Equal(t, []string{"Die", "1", "2", "3", "4", "5", "6", "Joker"},
+		titles(DefaultColumns(game.Literal)))
+	assert.Equal(t, []string{"Die", "1", "2", "3", "4", "5", "6"},
+		titles(DefaultColumns(game.Effective)),
+		"Effective counts the joker into every pip, so its own column would double-count it")
+
+	// The joker's mass really is in the pip columns it was dropped in favour of.
+	tengri := parseFixture(t)[2]
+	require.NotZero(t, tengri.Prob(game.Joker))
+	assert.InDelta(t, tengri.Prob(game.One)+tengri.Prob(game.Joker),
+		tengri.ProbBy(game.One, game.Effective), tolerance)
+}
+
+func TestEveryColumnHasATint(t *testing.T) {
+	// A Column with no tint falls back to plain page colors, which would look
+	// like a bug rather than a decision. Every constructor must set one.
+	dice := parseFixture(t)
+	sets := map[string][]Column{
+		"literal":   DefaultColumns(game.Literal),
+		"effective": DefaultColumns(game.Effective),
+		"weights":   WeightColumns(),
+	}
+	for name, cols := range sets {
+		for _, c := range cols {
+			assert.NotNil(t, c.tint, "%s column %q has no tint", name, c.Title)
+			assert.NotPanics(t, func() { c.style(dice[0], true) })
+		}
+	}
+}
