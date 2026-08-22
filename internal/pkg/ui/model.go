@@ -78,9 +78,12 @@ func columns(v view) []Column {
 	switch v {
 	case weights:
 		return WeightColumns()
+	case literalOdds:
+		return DefaultColumns(game.Literal)
 	case effectiveOdds:
 		return DefaultColumns(game.Effective)
 	}
+	// Every view is named above; this is only here for the compiler.
 	return DefaultColumns(game.Literal)
 }
 
@@ -109,19 +112,18 @@ type model struct {
 func newModel(dice []game.Die) model {
 	m := model{dice: dice, view: literalOdds, width: 80, height: 24}
 	m.cols = columns(m.view)
-	m.resort()
-	return m
+	return m.resort()
 }
 
 // setView swaps the table over to v, holding the sort on the same column where
 // that column still exists. Leaving the weights view drops the total column, so
 // a sort on it falls back to the last column that survives.
-func (m *model) setView(v view) {
+func (m model) setView(v view) model {
 	m.view = v
 	m.cols = columns(v)
 	m.sort = min(m.sort, len(m.cols)-1)
-	m.resort()
 	m.cursor, m.top = 0, 0
+	return m.resort()
 }
 
 // frameRate is how often the wordmark's colors advance. Slow enough that the
@@ -141,8 +143,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
-		m.scroll()
-		return m, nil
+		return m.scroll(), nil
 	case tickMsg:
 		m.phase++
 		return m, tick()
@@ -169,25 +170,24 @@ func (m model) key(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		m.cursor = len(m.dice) - 1
 
 	case "left", "h":
-		m.sortOn(m.sort - 1)
+		m = m.sortOn(m.sort - 1)
 	case "right", "l":
-		m.sortOn(m.sort + 1)
+		m = m.sortOn(m.sort + 1)
 	case "tab":
-		m.setView(m.view.next())
+		m = m.setView(m.view.next())
 	case " ", "enter":
 		m.desc = !m.desc
-		m.resort()
 		m.cursor = 0
+		m = m.resort()
 	}
-	m.scroll()
-	return m, nil
+	return m.scroll(), nil
 }
 
 // sortOn re-sorts by column i, or reverses it if it is already the sort
 // column. Out-of-range indexes are ignored so the arrow keys stop at the ends.
-func (m *model) sortOn(i int) {
+func (m model) sortOn(i int) model {
 	if i < 0 || i >= len(m.cols) {
-		return
+		return m
 	}
 	if i == m.sort {
 		m.desc = !m.desc
@@ -197,14 +197,17 @@ func (m *model) sortOn(i int) {
 		// as "which die rolls this most often".
 		m.desc = i != 0
 	}
-	m.resort()
 	m.cursor = 0
+	return m.resort()
 }
 
-func (m *model) resort() { SortBy(m.dice, m.cols[m.sort], m.desc) }
+func (m model) resort() model {
+	SortBy(m.dice, m.cols[m.sort], m.desc)
+	return m
+}
 
 // scroll clamps the cursor to the dice and the window to the cursor.
-func (m *model) scroll() {
+func (m model) scroll() model {
 	m.cursor = min(max(m.cursor, 0), len(m.dice)-1)
 	switch rows := m.rows(); {
 	case m.cursor < m.top:
@@ -213,6 +216,7 @@ func (m *model) scroll() {
 		m.top = m.cursor - rows + 1
 	}
 	m.top = min(max(m.top, 0), max(len(m.dice)-m.rows(), 0))
+	return m
 }
 
 // rows is how many dice fit on screen.

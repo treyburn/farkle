@@ -157,6 +157,9 @@ var (
 // Three rows rather than two because two is six half-pixels short of what an E
 // needs: with only four pixels of height there is nowhere to put the middle
 // bar, and E comes out identical to C.
+// would hide the letter shapes the layout depends on being able to read.
+//
+//nolint:goconst // These are pixels, not strings: naming the repeated runs
 var blockFont = map[rune][3]string{
 	'A': {
 		"▄▀▀▄",

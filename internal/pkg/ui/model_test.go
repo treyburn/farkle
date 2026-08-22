@@ -43,7 +43,7 @@ func sized(t *testing.T, w, h int) model {
 	require.NotEmpty(t, dice)
 	m := newModel(dice)
 	m.width, m.height = w, h
-	m.scroll()
+	m = m.scroll()
 	return m
 }
 
@@ -93,43 +93,43 @@ func TestSortOnTogglesDirectionAndClamps(t *testing.T) {
 	// biggest first, names ascending.
 	require.Equal(t, 0, m.sort, "the table opens sorted by name")
 	require.False(t, m.desc)
-	m.sortOn(3)
+	m = m.sortOn(3)
 	assert.Equal(t, 3, m.sort)
 	assert.True(t, m.desc)
 
 	// Re-selecting the live column reverses it instead of doing nothing.
-	m.sortOn(3)
+	m = m.sortOn(3)
 	assert.Equal(t, 3, m.sort)
 	assert.False(t, m.desc)
 
 	// Coming back to the name column picks ascending again rather than
 	// inheriting the direction of the column just left.
-	m.sortOn(0)
+	m = m.sortOn(0)
 	assert.Equal(t, 0, m.sort)
 	assert.False(t, m.desc)
-	m.sortOn(3)
+	m = m.sortOn(3)
 	assert.True(t, m.desc)
 
 	// Out of range is ignored, so the arrow keys simply stop at the ends.
-	m.sortOn(-1)
+	m = m.sortOn(-1)
 	assert.Equal(t, 3, m.sort)
-	m.sortOn(len(m.cols))
+	m = m.sortOn(len(m.cols))
 	assert.Equal(t, 3, m.sort)
 }
 
 func TestSortActuallyOrdersTheDice(t *testing.T) {
 	m := sized(t, 100, 30)
-	m.setView(weights)
+	m = m.setView(weights)
 	total := len(m.cols) - 1
 	require.Equal(t, "Total", m.cols[total].Title)
 
-	m.sortOn(total)
+	m = m.sortOn(total)
 	require.True(t, m.desc)
 	for i := 1; i < len(m.dice); i++ {
 		assert.GreaterOrEqual(t, m.dice[i-1].TotalWeight(), m.dice[i].TotalWeight())
 	}
 
-	m.sortOn(total) // reverse
+	m = m.sortOn(total) // reverse
 	for i := 1; i < len(m.dice); i++ {
 		assert.LessOrEqual(t, m.dice[i-1].TotalWeight(), m.dice[i].TotalWeight())
 	}
@@ -137,13 +137,13 @@ func TestSortActuallyOrdersTheDice(t *testing.T) {
 
 func TestSetViewKeepsTheSortInRange(t *testing.T) {
 	m := sized(t, 100, 30)
-	m.setView(weights)
-	m.sortOn(len(m.cols) - 1) // Total, which only this view has
+	m = m.setView(weights)
+	m = m.sortOn(len(m.cols) - 1) // Total, which only this view has
 	require.Equal(t, "Total", m.cols[m.sort].Title)
 
 	// Effective odds is the narrowest table; the sort has to land on a column
 	// that still exists rather than off the end.
-	m.setView(effectiveOdds)
+	m = m.setView(effectiveOdds)
 	assert.Less(t, m.sort, len(m.cols))
 	assert.NotPanics(t, func() { _ = m.View() })
 	assert.Equal(t, "6", m.cols[m.sort].Title)
@@ -155,20 +155,20 @@ func TestScrollFollowsTheCursor(t *testing.T) {
 	last := len(m.dice) - 1
 
 	m.cursor = last
-	m.scroll()
+	m = m.scroll()
 	assert.Equal(t, last, m.cursor)
 	assert.Equal(t, last-2, m.top, "the window slides down to hold the cursor")
 
 	m.cursor = 0
-	m.scroll()
+	m = m.scroll()
 	assert.Equal(t, 0, m.top)
 
 	// The cursor cannot leave the dice in either direction.
 	m.cursor = -5
-	m.scroll()
+	m = m.scroll()
 	assert.Equal(t, 0, m.cursor)
 	m.cursor = last + 99
-	m.scroll()
+	m = m.scroll()
 	assert.Equal(t, last, m.cursor)
 
 	// And the last page is a full one rather than mostly blank.
@@ -182,7 +182,7 @@ func TestKeysDriveTheTable(t *testing.T) {
 	m, _ = press(t, m, "tab")
 	assert.Equal(t, before.next(), m.view, "tab advances the mode")
 
-	m.sortOn(2)
+	m = m.sortOn(2)
 	sortBefore, descBefore := m.sort, m.desc
 	m, _ = press(t, m, " ")
 	assert.Equal(t, sortBefore, m.sort)
@@ -232,7 +232,7 @@ func TestViewFillsTheScreenExactly(t *testing.T) {
 		for _, h := range []int{60, 30, 18, 13, 12, 8, 1} {
 			for _, v := range views {
 				m := sized(t, w, h)
-				m.setView(v)
+				m = m.setView(v)
 				lines := strings.Split(m.View(), "\n")
 				require.Len(t, lines, h, "w=%d h=%d v=%v", w, h, v)
 				for i, line := range lines {
@@ -254,7 +254,7 @@ func TestViewShowsWhatTheModeSays(t *testing.T) {
 	}
 	for _, v := range views {
 		m := sized(t, 120, 30)
-		m.setView(v)
+		m = m.setView(v)
 		out := strip(m.View())
 		assert.Contains(t, out, v.String(), "the selector should name every mode")
 		assert.Contains(t, out, v.blurb(), "the blurb should explain the live mode")
