@@ -3,6 +3,9 @@ package game
 import (
 	"testing"
 	"uuid"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 const (
@@ -23,15 +26,19 @@ func TestParseSkipsBadEntries(t *testing.T) {
     ]`
 
 	dice, err := Parse([]byte(data))
-	if err == nil {
-		t.Fatal("Parse should report the five malformed entries")
-	}
-	if len(dice) != 2 {
-		t.Fatalf("got %d dice, want the 2 well-formed ones", len(dice))
-	}
-	if dice[0].ID != uuid.MustParse(idGood) || dice[1].ID != uuid.MustParse(idAlsoGood) {
-		t.Errorf("kept IDs %s and %s, want %s and %s", dice[0].ID, dice[1].ID, idGood, idAlsoGood)
-	}
+	require.Error(t, err, "Parse should report the five malformed entries")
+	require.Len(t, dice, 2, "only the well-formed entries should survive")
+
+	// Every rejection reason should be named, so a reader of the log can tell
+	// which entry failed and why.
+	assert.ErrorContains(t, err, "Mismatched die")
+	assert.ErrorContains(t, err, "Weightless die")
+	assert.ErrorContains(t, err, "Out of range die")
+	assert.ErrorContains(t, err, "Unidentified die")
+	assert.ErrorContains(t, err, "not-a-uuid")
+
+	assert.Equal(t, uuid.MustParse(idGood), dice[0].ID)
+	assert.Equal(t, uuid.MustParse(idAlsoGood), dice[1].ID)
 }
 
 func TestParseRejectsDuplicateIDs(t *testing.T) {
@@ -41,12 +48,15 @@ func TestParseRejectsDuplicateIDs(t *testing.T) {
     ]`
 
 	dice, err := Parse([]byte(data))
-	if err == nil {
-		t.Fatal("Parse should reject the duplicate Id")
-	}
-	// The first wins; IDs key persisted state, so a collision must not silently
-	// produce two rows that look identical to a caller.
-	if len(dice) != 1 || dice[0].Name != "First" {
-		t.Errorf("got %d dice (%+v), want only First", len(dice), dice)
-	}
+	require.Error(t, err, "Parse should reject the duplicate Id")
+	// The first wins; a collision must not silently produce two dice that look
+	// interchangeable to a caller.
+	require.Len(t, dice, 1)
+	assert.Equal(t, "First", dice[0].Name)
+}
+
+func TestParseRejectsMalformedJSON(t *testing.T) {
+	dice, err := Parse([]byte(`{"Id": "` + idGood + `"}`))
+	require.Error(t, err)
+	assert.Nil(t, dice, "a decode failure yields no dice at all, unlike a bad entry")
 }

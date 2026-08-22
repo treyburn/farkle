@@ -1,9 +1,15 @@
 package game
 
 import (
-	"math"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
+
+// tolerance is the slack allowed when comparing probabilities, which are sums
+// of repeated float division.
+const tolerance = 1e-9
 
 // fixture covers the awkward shapes in the real data: trailing whitespace, a
 // zero-weight side, a joker face, and a typographic apostrophe.
@@ -17,42 +23,27 @@ const fixture = `[
 func parseFixture(t *testing.T) []Die {
 	t.Helper()
 	dice, err := Parse([]byte(fixture))
-	if err != nil {
-		t.Fatalf("Parse: %v", err)
-	}
-	if len(dice) != 4 {
-		t.Fatalf("got %d dice, want 4", len(dice))
-	}
+	require.NoError(t, err)
+	require.Len(t, dice, 4)
 	return dice
 }
-
-func closeTo(got, want float64) bool { return math.Abs(got-want) < 1e-9 }
 
 // TestRealData guards against the shipped dice.json drifting out of shape. The
 // extraction pipeline in the README collapses the one duplicate pair, so names
 // are expected to be unique here even though the source XML has 44 entries.
 func TestRealData(t *testing.T) {
 	dice, err := Dice()
-	if err != nil {
-		t.Fatalf("Dice: %v", err)
-	}
-	if len(dice) == 0 {
-		t.Fatal("no dice parsed")
-	}
+	require.NoError(t, err)
+	require.NotEmpty(t, dice)
 
 	names := make(map[string]bool, len(dice))
 	for _, d := range dice {
-		var sum float64
+		sum := d.Prob(Joker)
 		for _, f := range Pips {
 			sum += d.Prob(f)
 		}
-		sum += d.Prob(Joker)
-		if !closeTo(sum, 1) {
-			t.Errorf("%s: probabilities sum to %v, want 1", d.Name, sum)
-		}
-		if names[d.Name] {
-			t.Errorf("%s: duplicate display name survived extraction", d.Name)
-		}
+		assert.InDelta(t, 1, sum, tolerance, "%s: probabilities should sum to 1", d.Name)
+		assert.False(t, names[d.Name], "%s: duplicate display name survived extraction", d.Name)
 		names[d.Name] = true
 	}
 }
