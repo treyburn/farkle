@@ -11,6 +11,8 @@ The following tools are required for developing of this repo:
 - [Just](https://just.systems/man/en/installation.html)
 - [Golangci-lint](https://golangci-lint.run/docs/welcome/install/local/)
 
+It can be helpful to use [mise](https://mise.jdx.dev/) for managing versioned dependencies that tend tro differ across repos like golangci-lint.
+
 ## Data Processing
 ### Data Exploration
 KCD2 stores it's data files under `{STEAM_DIR}/steamapps/common/KingdomComeDeliverance2/Data` with the extension of `.pak`.
