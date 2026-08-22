@@ -88,11 +88,11 @@ func TestViewCycleWrapsAndIsExhaustive(t *testing.T) {
 
 func TestColumnsPerView(t *testing.T) {
 	assert.Equal(t, []string{"Name", "1", "2", "3", "4", "5", "6", "Joker", "Total"},
-		titles(columns(weights)))
+		titles(viewColumns(weights)))
 	assert.Equal(t, []string{"Name", "1", "2", "3", "4", "5", "6", "Joker"},
-		titles(columns(literalOdds)))
+		titles(viewColumns(literalOdds)))
 	assert.Equal(t, []string{"Name", "1", "2", "3", "4", "5", "6"},
-		titles(columns(effectiveOdds)),
+		titles(viewColumns(effectiveOdds)),
 		"effective odds already count the joker into every pip")
 }
 
@@ -232,12 +232,12 @@ func TestMultiSelectTotalsThePickedFaces(t *testing.T) {
 	assert.Equal(t, sumColumn, m.sort, "multi-select is hard sorted on the total")
 	assert.True(t, m.desc, "best total first")
 
-	m.focus = m.faceIndex(game.Five)
+	m.focus = game.Five
 	m, _ = press(t, m, " ")
 	assert.Equal(t, []game.Face{game.Five}, m.picked.faces())
 
 	// Picking a second face widens the total rather than replacing it.
-	m.focus = m.faceIndex(game.One)
+	m.focus = game.One
 	m, _ = press(t, m, " ")
 	assert.Equal(t, []game.Face{game.One, game.Five}, m.picked.faces())
 	assert.Equal(t, sumColumn, m.sort, "picking must not move the sort off the total")
@@ -258,24 +258,24 @@ func TestMultiSelectTotalsThePickedFaces(t *testing.T) {
 func TestMultiSelectSpendsTheArrowKeysOnFaces(t *testing.T) {
 	m := sized(t, 140, 30)
 	m, _ = press(t, m, "m")
-	require.Equal(t, m.faceIndex(game.One), m.focus, "picking opens on the first face")
+	require.Equal(t, game.One, m.focus, "picking opens on the first face")
 
 	sorted := m.sort
 	m, _ = press(t, m, "right")
-	assert.Equal(t, game.Two, m.cols[m.focus].Face)
+	assert.Equal(t, game.Two, m.focus)
 	assert.Equal(t, sorted, m.sort, "the arrows move the picker, not the sort")
 
 	// The total is not a face, so stepping left off the first face stops
 	// rather than landing on it.
 	m, _ = press(t, m, "left")
 	m, _ = press(t, m, "left")
-	assert.Equal(t, game.One, m.cols[m.focus].Face)
+	assert.Equal(t, game.One, m.focus)
 
 	// And the far end holds too.
 	for range len(m.cols) + 2 {
 		m, _ = press(t, m, "right")
 	}
-	assert.Equal(t, game.Joker, m.cols[m.focus].Face)
+	assert.Equal(t, game.Joker, m.focus)
 
 	// Space is spent on picking here, so reversing has its own key.
 	desc := m.desc
@@ -301,16 +301,16 @@ func TestMultiSelectStaysAmongTheOddsViews(t *testing.T) {
 	// Under effective odds the joker has no column of its own, and the picker
 	// has to come off it rather than point past the end of the table.
 	m = m.setView(literalOdds)
-	m.focus = m.faceIndex(game.Joker)
+	m.focus = game.Joker
 	m = m.setView(effectiveOdds)
-	assert.Less(t, m.focus, len(m.cols))
-	assert.True(t, m.cols[m.focus].Face.Valid())
+	assert.Equal(t, game.Six, m.focus, "the picker falls back to the last face with a column")
+	assert.Positive(t, m.faceIndex(m.focus), "and that face is one the table shows")
 }
 
 func TestLeavingMultiSelectKeepsThePickedFace(t *testing.T) {
 	m := sized(t, 140, 30)
 	m, _ = press(t, m, "m")
-	m.focus = m.faceIndex(game.Six)
+	m.focus = game.Six
 	m, _ = press(t, m, " ")
 	require.Equal(t, []game.Face{game.Six}, m.picked.faces())
 
@@ -427,9 +427,14 @@ func TestPadFitsExactly(t *testing.T) {
 	// Cut rather than allowed to run on, which would shove the row's remaining
 	// columns out of line.
 	assert.Equal(t, "abcde", pad("abcdefgh", 5, true))
-	// Counted in runes, not bytes: the die names carry typographic apostrophes.
-	assert.Len(t, []rune(pad("Tengri’s", 5, true)), 5)
-	assert.Len(t, []rune(pad("’", 5, false)), 5)
+	// Counted in screen columns, not bytes: the die names carry typographic
+	// apostrophes, and a wide glyph occupies two columns of its own.
+	assert.Equal(t, 5, lipgloss.Width(pad("Tengri’s", 5, true)))
+	assert.Equal(t, 5, lipgloss.Width(pad("’", 5, false)))
+	// A wide glyph straddling the cut is dropped whole, so the cell would come
+	// up a column short unless the trim is padded back out.
+	assert.Equal(t, 1, lipgloss.Width(pad("漢字", 1, true)))
+	assert.Equal(t, 3, lipgloss.Width(pad("漢字", 3, false)))
 }
 
 func TestFitSquaresOffALine(t *testing.T) {
