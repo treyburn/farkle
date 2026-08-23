@@ -42,7 +42,8 @@ Sleep 1s
 Space
 Sleep 1s
 
-# ←/→ walk the sort along the columns - face 1, then 2, reverse sort, standard sort, then 3.
+# ←/→ walk the sort along the columns - face 1, then face 2, where space
+# turns it around and back again, then on to face 3.
 Right
 Sleep 1s
 Right
@@ -61,8 +62,9 @@ Sleep 1s
 Up@150ms 10
 Sleep 1s
 
-# tab cycles the view: face odds -> effective odds -> face weights, and
-# the sort holds its column across the switch.
+# tab cycles the view: face odds -> effective odds -> face weights and
+# back. The sort holds its column across each switch, so the numbers
+# change under it - and ←/→ still move it once the new view is up.
 Tab
 Sleep 2s
 Right
