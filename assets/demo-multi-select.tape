@@ -7,6 +7,9 @@
 #
 # Needs vhs, plus the ttyd and ffmpeg it shells out to.
 # Tape reference: https://github.com/charmbracelet/vhs
+#
+# Driven with the arrow pad keyset throughout, which is the one the footer
+# opens on. Every key here has a WASD twin the demo does not press.
 
 Output ./assets/demo-multi-select.gif
 
@@ -40,37 +43,37 @@ Sleep 1s
 Right
 Sleep 2s
 
-# m hands the arrow keys and space over to picking. The sort pins itself
-# to the Total column, which opens at zero until a face is picked.
-Type "m"
+# backspace hands the arrow keys and enter over to picking. The sort pins
+# itself to the Total column, which opens at zero until a face is picked.
+Backspace
 Sleep 2s
 
-# The cursor opens on face 1, so space counts it straight in.
-Space
+# The cursor opens on face 1, so enter counts it straight in.
+Enter
 Sleep 2s
 
 # ←/→ now walk the picking cursor rather than the sort: out to face 5,
 # and the Total becomes the chance of rolling a 1 or a 5.
 Right@200ms 4
 Sleep 1s
-Space
+Enter
 Sleep 2s
 
-# tab still switches the view. Under effective odds a joker stands in for
-# any face, so the same two picks total higher than they did.
-Tab
+# delete still switches the view. Under effective odds a joker stands in
+# for any face, so the same two picks total higher than they did.
+Delete
 Sleep 3s
 
 # Back down the row to add face 3 to the total.
 Left@200ms 2
 Sleep 1s
-Space
+Enter
 Sleep 2s
 
-# m steps back out to the single column mode, sorting on whichever face
-# the picking cursor was left on.
-Type "m"
+# backspace steps back out to the single column mode, sorting on whichever
+# face the picking cursor was left on.
+Backspace
 Sleep 3s
 
-Type "q"
+Escape
 Sleep 1s

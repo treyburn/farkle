@@ -23,18 +23,21 @@ Here you can see how to select multiple faces and sort on the combined probabili
 
 ## Controls
 
-The keys are always listed along the bottom of the screen, and change hands between the two modes:
+Common key hints are listed at the bottom, and the `?` help shortcut can be used to see the fulls et of available keybindings.
 
-| Key | Single column | Multi-select |
-| --- | --- | --- |
-| `←` `→` (`h` `l`) | move the sort to another column | move the cursor to another face |
-| `space` (`enter`) | reverse the sort | pick or unpick the face under the cursor |
-| `r` | reverse the sort | reverse the sort |
-| `tab` | cycle the view: face odds, effective odds, face weights | cycle the view, skipping face weights |
-| `m` | switch to multi-select | back to single column |
-| `↑` `↓` (`k` `j`) | scroll the table | scroll the table |
-| `g` `G` (`home` `end`) | jump to the top or bottom | jump to the top or bottom |
-| `q` (`esc`, `ctrl+c`) | quit | quit |
+Both the arrow pad and wasd gamer keys are supported modes with their own key bindings. Using one mode will update your key hints.
+
+| Key (Alternative Key)                   | Action                                                  |
+|-----------------------------------------|---------------------------------------------------------|
+| `↑` `↓` (`w` `s`)                       | scroll the table up/down                                |
+| `←` `→` (`a` `d`)                       | scroll the table left or right                          |
+| `insert` `delete` (`shift + tab` `tab`) | cycle the view: face odds, effective odds, face weights |
+| `backspace` (`x`)                       | switch to multi-select                                  |
+| `enter` (`space`)                       | select face in multi-selection                          |
+| `\` (`r`)                               | reverse the sort                                        |
+| `home` `end` (`q` `e`)                  | jump to the top or bottom                               |
+| `?`                                     | enter help menu                                         |
+| `esc` or `ctrl+c`                       | quit                                                    |
 
 ## Development
 

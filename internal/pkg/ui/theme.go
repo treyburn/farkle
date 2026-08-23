@@ -165,4 +165,13 @@ var (
 	// trimStyle carries no color of its own: it exists only to cut a string to
 	// a column count, leaving whatever style it is rendered into untouched.
 	trimStyle = lipgloss.NewStyle()
+
+	// The guide's four voices: the page's own name, the section headings, the
+	// things it is naming - keys and views - and the prose about them. They
+	// take the colors the table already spends on the same jobs, so the page
+	// reads as part of the program rather than a document inside it.
+	guideTitleStyle = lipgloss.NewStyle().Foreground(mauve).Bold(true).Background(base)
+	guideHeadStyle  = lipgloss.NewStyle().Foreground(lavender).Bold(true).Background(base)
+	guideKeyStyle   = lipgloss.NewStyle().Foreground(text).Background(base)
+	guideTextStyle  = lipgloss.NewStyle().Foreground(subtext0).Background(base)
 )

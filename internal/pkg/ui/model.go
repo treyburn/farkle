@@ -32,7 +32,7 @@ const (
 	effectiveOdds
 )
 
-// views is every view, in the order tab cycles them.
+// views is every view, in the order the view keys cycle them.
 var views = []view{weights, literalOdds, effectiveOdds}
 
 func (v view) String() string {
@@ -47,7 +47,11 @@ func (v view) String() string {
 	return "unknown view"
 }
 
-func (v view) next() view { return views[(int(v)+1)%len(views)] }
+// step walks the cycle one view in dir's direction, wrapping at either end.
+// Both directions are reachable because the view keys come as a pair.
+func (v view) step(dir int) view {
+	return views[((int(v)+dir)%len(views)+len(views))%len(views)]
+}
 
 // blurb says in one line what the numbers on screen actually mean. The three
 // views are easy to mix up - two of them are percentages that disagree - so the
@@ -147,6 +151,17 @@ type model struct {
 	// port is the screen and how far the table is scrolled within it.
 	port viewport
 
+	// keys is the keyset the footer names: whichever one the player last
+	// pressed a key from.
+	keys keyset
+
+	// guide is the help page, drawn over the whole screen in place of the
+	// table, and guideTop is how far down it the reader has scrolled. The
+	// table's own scroll is kept apart in port, so a player comes back to the
+	// dice where they left them.
+	guide    bool
+	guideTop int
+
 	// phase is how far the wordmark's colors have travelled, in characters.
 	phase int
 }
@@ -230,12 +245,13 @@ func (m model) setMulti(on bool) model {
 	return m.retable()
 }
 
-// nextView is what tab moves to. Multi-select stays among the odds views,
-// there being nothing in the weights view for it to total.
-func (m model) nextView() view {
-	v := m.view.next()
+// stepView is what the view keys move to, dir being which of the pair was
+// pressed. Multi-select stays among the odds views, there being nothing in the
+// weights view for it to total.
+func (m model) stepView(dir int) view {
+	v := m.view.step(dir)
 	if m.multi && v == weights {
-		v = v.next()
+		v = v.step(dir)
 	}
 	return v
 }
@@ -334,46 +350,80 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // key handles a single keypress. Sorting always leaves the cursor on the first
 // row, since the die it was pointing at has usually moved.
+//
+// Which keys reach which action is [bindings]' business; this only acts on what
+// they resolve to.
 func (m model) key(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
-	switch msg.String() {
-	case "q", "esc", "ctrl+c":
+	key := msg.String()
+	switch {
+	case key == "ctrl+c":
 		return m, tea.Quit
+	case isHelpKey(key):
+		m.guide = !m.guide
+		m.guideTop = 0
+		return m, nil
+	case key == "esc":
+		// Esc backs out of the guide before it backs out of the program. A page
+		// that covered the table and then closed the whole thing on the way out
+		// would cost a player their sort for having read it.
+		if m.guide {
+			m.guide = false
+			return m, nil
+		}
+		return m, tea.Quit
+	}
 
-	case "up", "k":
+	act, set, ok := lookup(key)
+	if !ok {
+		return m, nil
+	}
+	// The footer follows the hand: a player who reaches for one keyset is shown
+	// that set from then on, rather than a list of keys they are not using.
+	m.keys = set
+	if m.guide {
+		return m.scrollGuide(act), nil
+	}
+
+	switch act {
+	case scrollUp:
 		m.port.cursor--
-	case "down", "j":
+	case scrollDown:
 		m.port.cursor++
-	case "home", "g":
+	case jumpTop:
 		m.port.cursor = 0
-	case "end", "G":
+	case jumpEnd:
 		m.port.cursor = len(m.dice) - 1
 
-	// Multi-select spends the arrow keys and space on the selection: with the
-	// sort pinned to the total there is no column for them to move it to.
-	case "left", "h":
+	// Multi-select spends the sideways keys on the selection: with the sort
+	// pinned to the total there is no column for them to move it to.
+	case stepLeft:
 		if m.multi {
 			m = m.focusOn(-1)
 		} else {
 			m = m.sortOn(m.sort - 1)
 		}
-	case "right", "l":
+	case stepRight:
 		if m.multi {
 			m = m.focusOn(1)
 		} else {
 			m = m.sortOn(m.sort + 1)
 		}
-	case " ", "enter":
+
+	// Picking is the one action with nothing to do outside multi-select; the
+	// key is idle there rather than borrowed for something else, so it means
+	// the same thing wherever a player presses it.
+	case pickFace:
 		if m.multi {
 			m = m.pick()
-		} else {
-			m = m.reverse()
 		}
-	case "r":
+	case flipSort:
 		m = m.reverse()
 
-	case "tab":
-		m = m.setView(m.nextView())
-	case "m":
+	case viewFwd:
+		m = m.setView(m.stepView(1))
+	case viewBack:
+		m = m.setView(m.stepView(-1))
+	case flipMode:
 		m = m.setMulti(!m.multi)
 	}
 	return m.scroll(), nil
@@ -402,10 +452,12 @@ func (m model) resort() model {
 	return m
 }
 
-// scroll clamps the cursor to the dice and the window to the cursor.
+// scroll clamps the cursor to the dice and the window to the cursor - and the
+// guide's own scroll to the guide, since a terminal that has just been resized
+// can leave either of them pointing off the end.
 func (m model) scroll() model {
 	m.port = m.port.clamp(len(m.dice), m.frameHeight())
-	return m
+	return m.clampGuide()
 }
 
 // rows is how many dice fit on screen inside the live frame.

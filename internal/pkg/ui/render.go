@@ -34,6 +34,9 @@ func (m model) frameHeight() int {
 }
 
 func (m model) View() string {
+	if m.guide {
+		return m.guideView()
+	}
 	head, foot := m.frame()
 	rows := m.port.rows(len(head) + len(foot))
 
@@ -63,15 +66,52 @@ func (m model) View() string {
 	return strings.Join(lines, "\n")
 }
 
-// help is the footer's key list. It names what the keys do here rather than
-// everything they might do, since the arrow keys and space change hands when
-// multi-select takes over.
+// help is the footer's key list: each key with what it does in brackets after
+// it, so the keys line the row up and the words explain it.
+//
+// One keyset is listed at a time - the one the player last pressed a key from.
+// Naming both halves of every pair would run off an 80-column terminal, and a
+// footer that answered a WASD player in arrows would be telling them about a
+// hand position they have already turned down.
+//
+// The order is the hands' rather than the actions': the keys that move
+// something come first, then the ones that change what is on screen, then the
+// way out. Both keysets and both modes are built from the one list, so the
+// footer cannot reorder itself when a player changes hands.
+//
+// Reversing the sort is left off it. It is the one action the table already
+// offers twice over - the sideways keys reverse a column they are on - and the
+// room it was taking is better spent pointing at the guide, which has it along
+// with everything else the footer has no space to say.
+//
+// The four movement keys share one entry for much the same reason. Which way an
+// arrow goes is the one thing a player does not need telling, so the footer says
+// only that they move something and leaves what they move to the table, where
+// the cursor and the marked column are already showing it.
 func (m model) help() string {
-	if m.multi {
-		return "m single column · tab view · ←/→ face · space pick · r reverse · ↑/↓ scroll · q quit"
+	mode, view := "backspace", "del"
+	if m.keys == gamerKeys {
+		mode, view = "x", "tab"
 	}
-	return "m multi-select · tab view · ←/→ sort column · space reverse · ↑/↓ scroll · q quit"
+	// The mode key is named for where it leads rather than what it leaves, so
+	// it reads as the way through to the other mode either way round.
+	toMode := "multi-select"
+	if m.multi {
+		toMode = "single column"
+	}
+	parts := []string{
+		hint(m.keys.moveKeys(), "move"),
+		hint(view, "change odds"),
+		hint(mode, toMode),
+	}
+	if m.multi {
+		parts = append(parts, hint(m.keys.pickKey(), "select"))
+	}
+	return strings.Join(append(parts, hint("?", "help"), hint("esc", "quit")), " · ")
 }
+
+// hint is one footer entry: the key, then what it does.
+func hint(key, does string) string { return key + " (" + does + ")" }
 
 // scrollHint says which way the table carries on past the screen, end being
 // one past the last die drawn. It is empty when the whole table fits, which is
@@ -148,13 +188,13 @@ func (m model) banner() string {
 // counted, but only prose can say what their total is a chance of.
 func (m model) modeBlurb() string {
 	if !m.multi {
-		return "One column orders the table; ←/→ moves the sort along it."
+		return "One column orders the table; " + m.keys.sideKeys() + " moves the sort along it."
 	}
 	faces := m.picked.faces()
 	if len(faces) == 0 {
 		// Short enough to survive an 80-column terminal, which is where a
 		// reader most needs telling why the column is all zeroes.
-		return "No faces picked yet - space picks the one under the cursor."
+		return "No faces picked yet - " + m.keys.pickKey() + " picks the one under the cursor."
 	}
 	names := make([]string, len(faces))
 	for i, f := range faces {
@@ -165,7 +205,7 @@ func (m model) modeBlurb() string {
 }
 
 // viewRadio is the view selector: every view listed, the live one filled in.
-// It shows what tab will do next as much as what is on screen now.
+// It shows what the view keys will do next as much as what is on screen now.
 func (m model) viewRadio() string {
 	entries := make([]string, len(views))
 	for i, v := range views {
@@ -176,7 +216,7 @@ func (m model) viewRadio() string {
 
 // modeRadio is the selection selector, the same shape as the view one because
 // it answers the same kind of question - which of these is on - about how the
-// table is picked and ordered. m moves between the two.
+// table is picked and ordered. Backspace moves between the two.
 func (m model) modeRadio() string {
 	return radio([]string{
 		radioStyle(!m.multi).Render(button(!m.multi) + "single column"),
