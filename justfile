@@ -62,3 +62,6 @@ vet:
 # Apply fixes for outdated APIs.
 fix:
     go fix ./...
+
+# A quick and convenient wrapper to run a bunch of common commands before CI.
+ci: fix fmt vet lint test

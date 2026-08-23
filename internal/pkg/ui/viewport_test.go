@@ -29,11 +29,13 @@ func TestRowsNeverFallsBelowOne(t *testing.T) {
 }
 
 func TestClampHoldsTheCursorInRange(t *testing.T) {
-	v := viewport{height: 30, width: 100}
+	v := viewport{
+		height: 30, width: 100,
 
-	// Past the end comes back to the last die, and before the start to the
-	// first, so the arrow keys simply stop rather than running off.
-	v.cursor = testDice + 99
+		// Past the end comes back to the last die, and before the start to the
+		// first, so the arrow keys simply stop rather than running off.
+		cursor: testDice + 99,
+	}
 	assert.Equal(t, testDice-1, v.clamp(testDice, testFrame).cursor)
 	v.cursor = -5
 	assert.Equal(t, 0, v.clamp(testDice, testFrame).cursor)

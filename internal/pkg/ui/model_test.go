@@ -69,7 +69,7 @@ func sized(t *testing.T, w, h int) model {
 // what it says without minding how it is painted.
 func stripANSI(s string) string {
 	var b strings.Builder
-	for _, line := range strings.Split(s, "\n") {
+	for line := range strings.SplitSeq(s, "\n") {
 		b.WriteString(lipgloss.NewStyle().Render(line))
 	}
 	return b.String()
