@@ -1,0 +1,22 @@
+name: Data update
+description: The dice tables have gone stale with a new KCD2 patch.
+title: "[Data]: "
+labels:
+  - stale data
+body:
+  - type: input
+    id: patch-notes
+    attributes:
+      label: KCD2 patch notes
+      description: A link to the change notes covering the new or rebalanced dice.
+      placeholder: https://...
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Anything else?
+      description: Optional - which dice changed, if you already know.
+    validations:
+      required: false
