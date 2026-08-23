@@ -42,7 +42,7 @@ func sized(t *testing.T, w, h int) model {
 	require.NoError(t, err)
 	require.NotEmpty(t, dice)
 	m := newModel(dice)
-	m.width, m.height = w, h
+	m.port.width, m.port.height = w, h
 	m = m.scroll()
 	return m
 }
@@ -160,29 +160,33 @@ func TestSetViewKeepsTheSortInRange(t *testing.T) {
 }
 
 func TestScrollFollowsTheCursor(t *testing.T) {
-	m := sized(t, 100, chrome+3)
+	// Sized so that exactly three dice fit inside whatever the frame is
+	// currently costing, rather than against a hand-counted total.
+	m := sized(t, 100, 30)
+	m.port.height = m.frameHeight() + 3
+	m = m.scroll()
 	require.Equal(t, 3, m.rows())
 	last := len(m.dice) - 1
 
-	m.cursor = last
+	m.port.cursor = last
 	m = m.scroll()
-	assert.Equal(t, last, m.cursor)
-	assert.Equal(t, last-2, m.top, "the window slides down to hold the cursor")
+	assert.Equal(t, last, m.port.cursor)
+	assert.Equal(t, last-2, m.port.top, "the window slides down to hold the cursor")
 
-	m.cursor = 0
+	m.port.cursor = 0
 	m = m.scroll()
-	assert.Equal(t, 0, m.top)
+	assert.Equal(t, 0, m.port.top)
 
 	// The cursor cannot leave the dice in either direction.
-	m.cursor = -5
+	m.port.cursor = -5
 	m = m.scroll()
-	assert.Equal(t, 0, m.cursor)
-	m.cursor = last + 99
+	assert.Equal(t, 0, m.port.cursor)
+	m.port.cursor = last + 99
 	m = m.scroll()
-	assert.Equal(t, last, m.cursor)
+	assert.Equal(t, last, m.port.cursor)
 
 	// And the last page is a full one rather than mostly blank.
-	assert.Equal(t, len(m.dice)-m.rows(), m.top)
+	assert.Equal(t, len(m.dice)-m.rows(), m.port.top)
 }
 
 func TestKeysDriveTheTable(t *testing.T) {
@@ -204,7 +208,7 @@ func TestKeysDriveTheTable(t *testing.T) {
 	assert.Equal(t, sortBefore, m.sort)
 
 	m, _ = press(t, m, "down")
-	assert.Equal(t, 1, m.cursor)
+	assert.Equal(t, 1, m.port.cursor)
 
 	// The shortcuts that were removed must stay removed.
 	for _, key := range []string{"n", "0", "1", "6"} {
@@ -357,8 +361,8 @@ func TestWindowResizeIsHonoured(t *testing.T) {
 	m := sized(t, 100, 30)
 	next, _ := m.Update(tea.WindowSizeMsg{Width: 64, Height: 20})
 	m = next.(model)
-	assert.Equal(t, 64, m.width)
-	assert.Equal(t, 20, m.height)
+	assert.Equal(t, 64, m.port.width)
+	assert.Equal(t, 20, m.port.height)
 	assert.Len(t, strings.Split(m.View(), "\n"), 20)
 }
 
