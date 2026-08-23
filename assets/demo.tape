@@ -6,6 +6,9 @@
 #
 # Needs vhs, plus the ttyd and ffmpeg it shells out to.
 # Tape reference: https://github.com/charmbracelet/vhs
+#
+# Driven with the arrow pad keyset throughout, which is the one the footer
+# opens on. Every key here has a WASD twin the demo does not press.
 
 Output ./assets/demo.gif
 
@@ -35,22 +38,22 @@ Sleep 1s
 Enter
 Sleep 1s
 
-# It opens sorted by name; space flips the direction of whatever column
-# the sort is on.
-Space
+# It opens sorted by name; \ flips the direction of whatever column the
+# sort is on.
+Type "\"
 Sleep 1s
-Space
+Type "\"
 Sleep 1s
 
-# ←/→ walk the sort along the columns - face 1, then face 2, where space
+# ←/→ walk the sort along the columns - face 1, then face 2, where \
 # turns it around and back again, then on to face 3.
 Right
 Sleep 1s
 Right
 Sleep 1s
-Space
+Type "\"
 Sleep 1s
-Space
+Type "\"
 Sleep 1s
 Right
 Sleep 1s
@@ -62,21 +65,31 @@ Sleep 1s
 Up@150ms 10
 Sleep 1s
 
-# tab cycles the view: face odds -> effective odds -> face weights and
-# back. The sort holds its column across each switch, so the numbers
-# change under it - and ←/→ still move it once the new view is up.
-Tab
+# delete cycles the view: face odds -> effective odds -> face weights and
+# back, with insert walking the same cycle the other way. The sort holds
+# its column across each switch, so the numbers change under it - and ←/→
+# still move it once the new view is up.
+Delete
 Sleep 2s
 Right
 Sleep 1s
 
-Tab
+Delete
 Sleep 1s
 Left 2
 Sleep 1s
 
-Tab
+Delete
 Sleep 1s
 
-Type "q"
+# ? opens the guide: both keysets in full, and what the views and
+# multi-select mean. esc backs out of it.
+Type "?"
+Sleep 3s
+Down@150ms 8
+Sleep 2s
+Escape
+Sleep 1s
+
+Escape
 Sleep 1s
