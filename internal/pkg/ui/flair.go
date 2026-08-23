@@ -34,6 +34,12 @@ var ramp = []lipgloss.Color{
 //
 //nolint:goconst // These are pixels, not strings: naming the repeated runs
 var blockFont = map[rune][3]string{
+	'2': {
+		"▄▀▀▄",
+		"  ▄▀",
+		"█▄▄▄",
+	},
+
 	'A': {
 		"▄▀▀▄",
 		"█▄▄█",
