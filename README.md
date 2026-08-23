@@ -9,11 +9,32 @@ The dice table data is pulled straight from the game files, rather than some out
 
 You can sort dice based on face odds, effective odds including joker values, and overall raw weights. You can also select multiple faces and sort of combined probability.
 
-## Sorting odds and switching to effective odds
+### Sorting odds and switching to effective odds
+
+In the above, you can see how to cycle through the different odds views and how to sort on different faces.
 
 ![sorting the dice table and cycling views](./assets/demo.gif)
 
-## Selecting multiple faces to sort on the combined odds
+### Selecting multiple faces to sort on the combined odds
+
+In the below you can see how to select multiple faces and sort on the combined probability that you will get 1 of the selected faces.
+
+![Selecting multiple faces to sort on the combined odds](./assets/demo-multi-select.gif)
+
+## Controls
+
+The keys are always listed along the bottom of the screen, and change hands between the two modes:
+
+| Key | Single column | Multi-select |
+| --- | --- | --- |
+| `←` `→` (`h` `l`) | move the sort to another column | move the cursor to another face |
+| `space` (`enter`) | reverse the sort | pick or unpick the face under the cursor |
+| `r` | reverse the sort | reverse the sort |
+| `tab` | cycle the view: face odds, effective odds, face weights | cycle the view, skipping face weights |
+| `m` | switch to multi-select | back to single column |
+| `↑` `↓` (`k` `j`) | scroll the table | scroll the table |
+| `g` `G` (`home` `end`) | jump to the top or bottom | jump to the top or bottom |
+| `q` (`esc`, `ctrl+c`) | quit | quit |
 
 ## Development
 
