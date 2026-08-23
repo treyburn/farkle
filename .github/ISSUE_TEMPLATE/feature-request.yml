@@ -1,0 +1,14 @@
+name: Feature request
+description: Suggest something you'd like farkle to do.
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: request
+    attributes:
+      label: What would you like to see?
+      description: A sentence or two is plenty.
+      placeholder: I'd like to be able to ...
+    validations:
+      required: true
