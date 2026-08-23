@@ -8,26 +8,20 @@ Both scripts need [nushell](https://www.nushell.sh/); `extract.nu` also needs `u
 
 ### From a game install
 
-[sync.nu](extract.nu) pulls the source xml out of a KCD2 install, drops it in this directory, and then runs the extraction:
+[extract.nu](extract.nu) pulls the source xml out of a KCD2 install, drops it in this directory, and then runs the processing to regenerate dice.json:
 
 ```shell
-just data-sync ~/.steam/steam/steamapps/common/KingdomComeDeliverance2
-
-# or directly
-nu ./data/extract.nu ~/.steam/steam/steamapps/common/KingdomComeDeliverance2
+just data-extract ~/.steam/steam/steamapps/common/KingdomComeDeliverance2
 ```
 
 It accepts either the install root or the directory holding the `.pak`, and takes a `--locale` flag (default `English`) to pick which localization pak the display names come from.
 
 ### From the xml already here
 
-[extract.nu](process.nu) does the extraction alone - it reads `item.xml`, `item__dlc.xml` and `text_ui_items.xml` from this directory and writes `dice.json`:
+[process.nu](process.nu) does the regeneration of `dice.json` - it reads from `item.xml`, `item__dlc.xml` and `text_ui_items.xml`:
 
 ```shell
-just data
-
-# or directly
-nu ./data/process.nu
+just data-regenerate
 ```
 
 ## How This Works
