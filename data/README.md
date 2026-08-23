@@ -4,17 +4,17 @@
 
 ## Regenerating dice.json
 
-Both scripts need [nushell](https://www.nushell.sh/); `sync.nu` also needs `unzip` on your PATH. There are `just` recipes for both, and they can be run directly too.
+Both scripts need [nushell](https://www.nushell.sh/); `extract.nu` also needs `unzip` on your PATH. There are `just` recipes for both, and they can be run directly too.
 
 ### From a game install
 
-[sync.nu](sync.nu) pulls the source xml out of a KCD2 install, drops it in this directory, and then runs the extraction:
+[sync.nu](extract.nu) pulls the source xml out of a KCD2 install, drops it in this directory, and then runs the extraction:
 
 ```shell
 just data-sync ~/.steam/steam/steamapps/common/KingdomComeDeliverance2
 
 # or directly
-nu ./data/sync.nu ~/.steam/steam/steamapps/common/KingdomComeDeliverance2
+nu ./data/extract.nu ~/.steam/steam/steamapps/common/KingdomComeDeliverance2
 ```
 
 It accepts either the install root or the directory holding the `.pak`, and takes a `--locale` flag (default `English`) to pick which localization pak the display names come from.

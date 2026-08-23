@@ -3,7 +3,7 @@
 # Rebuild dice.json from the KCD2 game xml files.
 #
 # Expects item.xml, item__dlc.xml and text_ui_items.xml to already be present in
-# the data directory - `sync.nu` pulls those out of a game install for you.
+# the data directory - `extract.nu` pulls those out of a game install for you.
 def main [
     --data-dir: string # Directory holding the xml files and the dice.json output. Defaults to this script's directory.
 ] {
