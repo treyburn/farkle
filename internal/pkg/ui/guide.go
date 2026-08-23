@@ -142,6 +142,7 @@ func (m model) guideFoot(top, end, n int) string {
 // table while the guide is up: a player who stopped to read should not come
 // back to a re-sorted table because the page was taller than their terminal.
 func (m model) scrollGuide(act action) model {
+	//nolint:exhaustive // TODO - refactor the action type so that we can have subtypes - like a scroll action
 	switch act {
 	case scrollUp:
 		m.guideTop--
@@ -151,8 +152,6 @@ func (m model) scrollGuide(act action) model {
 		m.guideTop = 0
 	case jumpEnd:
 		m.guideTop = len(m.guideLines())
-	default:
-		// should not reach this
 	}
 	return m.clampGuide()
 }
