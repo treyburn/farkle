@@ -7,6 +7,8 @@
 //   - table.go - Column, the column sets each view uses, sorting and search.
 //   - theme.go - the palette and the styles built from it.
 //   - flair.go - the block font and the color sweep that animates it.
+//   - keys.go - the two keysets and the actions they reach.
+//   - guide.go - the help page ? opens over the table.
 //   - model.go - the Bubble Tea model: state and key handling.
 //   - viewport.go - the screen and the scrolling window onto the dice.
 //   - render.go - the View: banner, header, rows and the footer.
@@ -16,10 +18,16 @@
 //
 // # Modes
 //
-// Tab cycles the three views - raw weights, literal odds, effective odds - and
-// m turns multi-select on top of whichever is live. Picking several faces adds
-// a total column of the chance of rolling any one of them, counted the way the
-// live view counts, and the table is hard sorted on it.
+// Insert and delete cycle the three views - raw weights, literal odds,
+// effective odds - and backspace turns multi-select on top of whichever is
+// live. Picking several faces adds a total column of the chance of rolling any
+// one of them, counted the way the live view counts, and the table is hard
+// sorted on it.
+//
+// Every action has a second key within reach of WASD, and the footer names
+// whichever of the two sets was last used; see keys.go. The footer is only a
+// reminder - ? opens the guide, which has both sets in full along with what the
+// views and multi-select mean.
 //
 // A Column pairs a header with a cell renderer, a comparator and a tint, so the
 // value on screen, the order it sorts in and the color it is drawn in cannot
