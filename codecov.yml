@@ -7,11 +7,6 @@ coverage:
       default:
         informational: true
 
-# main is wiring: it loads the dice, reports the two ways that can fail, and
-# hands off to internal/pkg/ui. There is nothing there a test could hold on to.
-ignore:
-  - "cmd/farkle/main.go"
-
 comment:
   layout: "reach,diff,flags,files"
   behavior: default

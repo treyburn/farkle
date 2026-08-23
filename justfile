@@ -1,6 +1,6 @@
 bin_dir := justfile_directory() / "bin"
 data_dir := justfile_directory() / "data"
-pkg := "./cmd/farkle"
+pkg := "."
 
 # Prints all available recipes.
 help:

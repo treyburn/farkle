@@ -18,7 +18,7 @@ You can sort dice based on face odds, effective odds including joker values, and
 If you have the [Go toolchain](https://go.dev/doc/install) on your system - then you can trivially compile this from source as it is a pure Go program with zero C dependencies.
 
 ```shell
-go install go.treyburn.dev/farkle/cmd/farkle@latest
+go install go.treyburn.dev/farkle@latest
 ```
 
 Just make sure you have your `$GOBIN` in your `$PATH`.
