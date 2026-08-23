@@ -34,7 +34,7 @@ def main [
     print $"extracting from ($localization)"
     ^unzip -o -j $localization "*text_ui_items.xml" -d $dir | ignore
 
-    nu ($env.FILE_PWD | path join "extract.nu") --data-dir $dir
+    nu ($env.FILE_PWD | path join "process.nu") --data-dir $dir
 }
 
 # Returns the first of the candidate globs (relative to root) that matches a file.
