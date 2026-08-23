@@ -29,7 +29,7 @@ Set Height 500
 
 # Build off camera so the demo opens on a clean prompt.
 Hide
-Type "go build -o ./bin/farkle ./cmd/farkle && export PATH=$PWD/bin:$PATH && clear"
+Type "go build -o ./bin/farkle . && export PATH=$PWD/bin:$PATH && clear"
 Enter
 Sleep 8s
 Show
