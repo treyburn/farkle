@@ -35,6 +35,10 @@ const uniform = 1.0 / 6.0
 
 var (
 	helpStyle = lipgloss.NewStyle().Foreground(overlay1).Background(base)
+	// hintStyle is the scroll marker under the last row. It sits a shade above
+	// the help, being something the reader has to act on rather than a
+	// standing reminder of the keys.
+	hintStyle = lipgloss.NewStyle().Foreground(subtext0).Background(base)
 	// pageStyle paints the terminal behind the table, so the theme holds even
 	// where the rows do not reach.
 	pageStyle = lipgloss.NewStyle().Foreground(text).Background(base)
