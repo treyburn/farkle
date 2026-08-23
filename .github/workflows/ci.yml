@@ -43,6 +43,16 @@ jobs:
         with:
           go-version-file: go.mod
           cache-dependency-path: go.sum
+      - name: Download deps
+        run: go mod download
+      # Check if `go fix ./...` would change anything
+      - name: Fix
+        run: |
+          go fix ./...
+          if ! git diff --exit-code; then
+            echo "::error::go fix ./... changed files; run 'just fix' and commit the result"
+            exit 1
+          fi
       # Installs the tools pinned in mise.toml and puts them on PATH.
       - uses: jdx/mise-action@v4
       - name: Lint
