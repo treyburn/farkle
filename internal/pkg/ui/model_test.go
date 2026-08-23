@@ -445,8 +445,13 @@ func TestMultiSelectViewNamesWhatItTotals(t *testing.T) {
 	assert.Contains(t, out, "•1", "a picked column is marked in the header")
 	assert.Contains(t, out, "space pick")
 
+	// The blurb says what the total is a chance of, and only that: switching
+	// views changes what the numbers mean, which is the view blurb's job to
+	// explain rather than something to repeat here.
 	m = m.setView(effectiveOdds)
-	assert.Contains(t, stripANSI(m.View()), "joker counts once")
+	out = stripANSI(m.View())
+	assert.Contains(t, out, "a 1 or a 5")
+	assert.Contains(t, out, "(•) effective odds")
 
 	off, _ := press(t, m, "m")
 	out = stripANSI(off.View())

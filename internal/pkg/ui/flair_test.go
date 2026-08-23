@@ -9,7 +9,7 @@ import (
 )
 
 func TestWordmarkRowsStayAligned(t *testing.T) {
-	m := wordmark("FARKLE DICE")
+	m := wordmark("KCD2 FARKLE DICE")
 	require.NotEmpty(t, m[0])
 	// The gradient steps by character position, so the rows must be the same
 	// length or the colors will not line up vertically.
