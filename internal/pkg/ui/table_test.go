@@ -60,18 +60,13 @@ func TestSortByAscending(t *testing.T) {
 	}, names(dice))
 }
 
-func TestFilterFoldsApostrophes(t *testing.T) {
-	dice := parseFixture(t)
-
-	assert.Len(t, Filter(dice, ""), len(dice), "an empty query keeps everything")
-	assert.Len(t, Filter(dice, "DIE"), 4, "matching is case-insensitive")
-
-	// The data uses U+2019 but a user types an ASCII apostrophe.
-	got := Filter(dice, "tengri's")
-	require.Len(t, got, 1)
-	assert.Equal(t, "Tengri’s die", got[0].Name)
-
-	assert.Empty(t, Filter(dice, "nonesuch"))
+// TestNameSortFoldsApostrophes pins the fold the name column orders by: the
+// data uses U+2019 where a reader expects an ASCII apostrophe, and the two
+// must not sort as different letters.
+func TestNameSortFoldsApostrophes(t *testing.T) {
+	assert.Equal(t, foldName("Tengri's die"), foldName("Tengri’s die"))
+	assert.Equal(t, foldName("tengri's die"), foldName("Tengri’s die"),
+		"and the fold is case-insensitive")
 }
 
 // TestDefaultColumnsCoverEveryFace pins the joker column in place. Without it a
@@ -251,4 +246,19 @@ func TestEveryColumnHasATint(t *testing.T) {
 			assert.NotPanics(t, func() { c.style(dice[0], true) })
 		}
 	}
+}
+
+// TestAnUntintedColumnStillDraws covers the fallback that keeps the assertion
+// above from being the only thing standing between a hand-built Column and a
+// nil call. Column is exported with exported fields, so a caller outside the
+// constructors here can hand style a zero value.
+func TestAnUntintedColumnStillDraws(t *testing.T) {
+	d := parseFixture(t)[0]
+	var bare Column
+	require.Nil(t, bare.tint)
+
+	// It still has to pick up the row background, or a selected row would break
+	// into bands wherever an untinted column fell.
+	assert.Equal(t, rowBG(true), bare.style(d, true).GetBackground())
+	assert.Equal(t, rowBG(false), bare.style(d, false).GetBackground())
 }

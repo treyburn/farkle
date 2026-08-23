@@ -26,6 +26,12 @@ func press(t *testing.T, m model, key string) (model, tea.Cmd) {
 		msg = tea.KeyMsg{Type: tea.KeyRight}
 	case "down":
 		msg = tea.KeyMsg{Type: tea.KeyDown}
+	case "up":
+		msg = tea.KeyMsg{Type: tea.KeyUp}
+	case "home":
+		msg = tea.KeyMsg{Type: tea.KeyHome}
+	case "end":
+		msg = tea.KeyMsg{Type: tea.KeyEnd}
 	case " ":
 		msg = tea.KeyMsg{Type: tea.KeySpace}
 	default:
@@ -42,7 +48,7 @@ func sized(t *testing.T, w, h int) model {
 	require.NoError(t, err)
 	require.NotEmpty(t, dice)
 	m := newModel(dice)
-	m.width, m.height = w, h
+	m.port.width, m.port.height = w, h
 	m = m.scroll()
 	return m
 }
@@ -88,12 +94,41 @@ func TestViewCycleWrapsAndIsExhaustive(t *testing.T) {
 
 func TestColumnsPerView(t *testing.T) {
 	assert.Equal(t, []string{"Name", "1", "2", "3", "4", "5", "6", "Joker", "Total"},
-		titles(columns(weights)))
+		titles(viewColumns(weights)))
 	assert.Equal(t, []string{"Name", "1", "2", "3", "4", "5", "6", "Joker"},
-		titles(columns(literalOdds)))
+		titles(viewColumns(literalOdds)))
 	assert.Equal(t, []string{"Name", "1", "2", "3", "4", "5", "6"},
-		titles(columns(effectiveOdds)),
+		titles(viewColumns(effectiveOdds)),
 		"effective odds already count the joker into every pip")
+}
+
+// TestFaceIndexReportsAMissingColumn pins the zero that setMulti's `i > 0`
+// guard leans on: a face with no column of its own must not be mistaken for
+// the name column at index 0.
+func TestFaceIndexReportsAMissingColumn(t *testing.T) {
+	m := sized(t, 140, 30).setView(literalOdds)
+	require.Positive(t, m.faceIndex(game.Joker), "literal odds gives the joker a column")
+
+	// Effective odds folds the joker into every pip, so it has none.
+	m = m.setView(effectiveOdds)
+	assert.Zero(t, m.faceIndex(game.Joker))
+
+	// Nor does anything that is not a face at all.
+	assert.Zero(t, m.faceIndex(game.Face(0)))
+	assert.Zero(t, m.faceIndex(game.Face(99)))
+}
+
+// TestAnUnnamedViewFallsBackSafely covers the arms the compiler insists on.
+// They are unreachable for the views in `views`, which the exhaustiveness test
+// above guards - but a view added without its switch arms has to degrade to
+// something drawable rather than an empty table or a panic.
+func TestAnUnnamedViewFallsBackSafely(t *testing.T) {
+	stray := view(99)
+	assert.Equal(t, "unknown view", stray.String())
+	assert.Empty(t, stray.blurb())
+	assert.Equal(t, titles(viewColumns(literalOdds)), titles(viewColumns(stray)),
+		"an unnamed view falls back to a usable table")
+	assert.Equal(t, game.Literal, stray.mode(), "and to counting jokers literally")
 }
 
 func TestSortOnTogglesDirectionAndClamps(t *testing.T) {
@@ -160,29 +195,33 @@ func TestSetViewKeepsTheSortInRange(t *testing.T) {
 }
 
 func TestScrollFollowsTheCursor(t *testing.T) {
-	m := sized(t, 100, chrome+3)
+	// Sized so that exactly three dice fit inside whatever the frame is
+	// currently costing, rather than against a hand-counted total.
+	m := sized(t, 100, 30)
+	m.port.height = m.frameHeight() + 3
+	m = m.scroll()
 	require.Equal(t, 3, m.rows())
 	last := len(m.dice) - 1
 
-	m.cursor = last
+	m.port.cursor = last
 	m = m.scroll()
-	assert.Equal(t, last, m.cursor)
-	assert.Equal(t, last-2, m.top, "the window slides down to hold the cursor")
+	assert.Equal(t, last, m.port.cursor)
+	assert.Equal(t, last-2, m.port.top, "the window slides down to hold the cursor")
 
-	m.cursor = 0
+	m.port.cursor = 0
 	m = m.scroll()
-	assert.Equal(t, 0, m.top)
+	assert.Equal(t, 0, m.port.top)
 
 	// The cursor cannot leave the dice in either direction.
-	m.cursor = -5
+	m.port.cursor = -5
 	m = m.scroll()
-	assert.Equal(t, 0, m.cursor)
-	m.cursor = last + 99
+	assert.Equal(t, 0, m.port.cursor)
+	m.port.cursor = last + 99
 	m = m.scroll()
-	assert.Equal(t, last, m.cursor)
+	assert.Equal(t, last, m.port.cursor)
 
 	// And the last page is a full one rather than mostly blank.
-	assert.Equal(t, len(m.dice)-m.rows(), m.top)
+	assert.Equal(t, len(m.dice)-m.rows(), m.port.top)
 }
 
 func TestKeysDriveTheTable(t *testing.T) {
@@ -204,7 +243,7 @@ func TestKeysDriveTheTable(t *testing.T) {
 	assert.Equal(t, sortBefore, m.sort)
 
 	m, _ = press(t, m, "down")
-	assert.Equal(t, 1, m.cursor)
+	assert.Equal(t, 1, m.port.cursor)
 
 	// The shortcuts that were removed must stay removed.
 	for _, key := range []string{"n", "0", "1", "6"} {
@@ -215,6 +254,68 @@ func TestKeysDriveTheTable(t *testing.T) {
 	_, cmd := press(t, m, "q")
 	require.NotNil(t, cmd)
 	assert.IsType(t, tea.QuitMsg{}, cmd())
+}
+
+// TestCursorKeysWalkTheDice covers the row navigation TestKeysDriveTheTable
+// only reaches downwards: up, and the two jumps to either end.
+func TestCursorKeysWalkTheDice(t *testing.T) {
+	m := sized(t, 100, 30)
+	last := len(m.dice) - 1
+	require.Greater(t, last, m.rows(), "the dice must overflow the screen to test scrolling")
+
+	// Up from the top stays put rather than running off into a negative row.
+	m, _ = press(t, m, "up")
+	assert.Equal(t, 0, m.port.cursor)
+
+	m, _ = press(t, m, "down")
+	m, _ = press(t, m, "down")
+	require.Equal(t, 2, m.port.cursor)
+	m, _ = press(t, m, "up")
+	assert.Equal(t, 1, m.port.cursor)
+
+	// End jumps to the last die and drags the window with it.
+	m, _ = press(t, m, "end")
+	assert.Equal(t, last, m.port.cursor)
+	assert.Equal(t, last-m.rows()+1, m.port.top, "the last die has to be on screen")
+
+	// Down from the bottom stays put, the mirror of up from the top.
+	m, _ = press(t, m, "down")
+	assert.Equal(t, last, m.port.cursor)
+
+	// Home comes back to the top and brings the window with it.
+	m, _ = press(t, m, "home")
+	assert.Equal(t, 0, m.port.cursor)
+	assert.Equal(t, 0, m.port.top)
+
+	// The vi aliases do the same, so a reader of the help footer can use
+	// either set.
+	for _, keys := range [][2]string{{"j", "k"}, {"G", "g"}} {
+		down, up := keys[0], keys[1]
+		m, _ = press(t, m, down)
+		assert.NotEqual(t, 0, m.port.cursor, "%q should move down", down)
+		m, _ = press(t, m, up)
+		assert.Equal(t, 0, m.port.cursor, "%q should come back", up)
+	}
+}
+
+func TestUpdateIgnoresUnknownMessages(t *testing.T) {
+	m := sized(t, 100, 30)
+	m, _ = press(t, m, "down")
+
+	// Bubble Tea delivers messages this model has no interest in - focus and
+	// blur, mouse events, its own internal signals. They must leave the model
+	// exactly as it was rather than resetting the cursor or re-sorting.
+	next, cmd := m.Update(tea.FocusMsg{})
+	assert.Nil(t, cmd)
+	assert.Equal(t, m, next.(model))
+}
+
+func TestInitStartsTheAnimation(t *testing.T) {
+	// Without a command from Init the wordmark never gets its first tick and
+	// the gradient sits frozen for the life of the program.
+	cmd := sized(t, 100, 30).Init()
+	require.NotNil(t, cmd)
+	assert.IsType(t, tickMsg{}, cmd(), "the command has to deliver a tick")
 }
 
 func TestMultiSelectTotalsThePickedFaces(t *testing.T) {
@@ -232,12 +333,12 @@ func TestMultiSelectTotalsThePickedFaces(t *testing.T) {
 	assert.Equal(t, sumColumn, m.sort, "multi-select is hard sorted on the total")
 	assert.True(t, m.desc, "best total first")
 
-	m.focus = m.faceIndex(game.Five)
+	m.focus = game.Five
 	m, _ = press(t, m, " ")
 	assert.Equal(t, []game.Face{game.Five}, m.picked.faces())
 
 	// Picking a second face widens the total rather than replacing it.
-	m.focus = m.faceIndex(game.One)
+	m.focus = game.One
 	m, _ = press(t, m, " ")
 	assert.Equal(t, []game.Face{game.One, game.Five}, m.picked.faces())
 	assert.Equal(t, sumColumn, m.sort, "picking must not move the sort off the total")
@@ -258,24 +359,24 @@ func TestMultiSelectTotalsThePickedFaces(t *testing.T) {
 func TestMultiSelectSpendsTheArrowKeysOnFaces(t *testing.T) {
 	m := sized(t, 140, 30)
 	m, _ = press(t, m, "m")
-	require.Equal(t, m.faceIndex(game.One), m.focus, "picking opens on the first face")
+	require.Equal(t, game.One, m.focus, "picking opens on the first face")
 
 	sorted := m.sort
 	m, _ = press(t, m, "right")
-	assert.Equal(t, game.Two, m.cols[m.focus].Face)
+	assert.Equal(t, game.Two, m.focus)
 	assert.Equal(t, sorted, m.sort, "the arrows move the picker, not the sort")
 
 	// The total is not a face, so stepping left off the first face stops
 	// rather than landing on it.
 	m, _ = press(t, m, "left")
 	m, _ = press(t, m, "left")
-	assert.Equal(t, game.One, m.cols[m.focus].Face)
+	assert.Equal(t, game.One, m.focus)
 
 	// And the far end holds too.
 	for range len(m.cols) + 2 {
 		m, _ = press(t, m, "right")
 	}
-	assert.Equal(t, game.Joker, m.cols[m.focus].Face)
+	assert.Equal(t, game.Joker, m.focus)
 
 	// Space is spent on picking here, so reversing has its own key.
 	desc := m.desc
@@ -301,16 +402,16 @@ func TestMultiSelectStaysAmongTheOddsViews(t *testing.T) {
 	// Under effective odds the joker has no column of its own, and the picker
 	// has to come off it rather than point past the end of the table.
 	m = m.setView(literalOdds)
-	m.focus = m.faceIndex(game.Joker)
+	m.focus = game.Joker
 	m = m.setView(effectiveOdds)
-	assert.Less(t, m.focus, len(m.cols))
-	assert.True(t, m.cols[m.focus].Face.Valid())
+	assert.Equal(t, game.Six, m.focus, "the picker falls back to the last face with a column")
+	assert.Positive(t, m.faceIndex(m.focus), "and that face is one the table shows")
 }
 
 func TestLeavingMultiSelectKeepsThePickedFace(t *testing.T) {
 	m := sized(t, 140, 30)
 	m, _ = press(t, m, "m")
-	m.focus = m.faceIndex(game.Six)
+	m.focus = game.Six
 	m, _ = press(t, m, " ")
 	require.Equal(t, []game.Face{game.Six}, m.picked.faces())
 
@@ -357,8 +458,8 @@ func TestWindowResizeIsHonoured(t *testing.T) {
 	m := sized(t, 100, 30)
 	next, _ := m.Update(tea.WindowSizeMsg{Width: 64, Height: 20})
 	m = next.(model)
-	assert.Equal(t, 64, m.width)
-	assert.Equal(t, 20, m.height)
+	assert.Equal(t, 64, m.port.width)
+	assert.Equal(t, 20, m.port.height)
 	assert.Len(t, strings.Split(m.View(), "\n"), 20)
 }
 
@@ -418,23 +519,4 @@ func TestRowsShrinkWithTheTerminal(t *testing.T) {
 	assert.Greater(t, tall.rows(), short.rows())
 	// Never zero, however cramped things get: something has to be on screen.
 	assert.Equal(t, 1, sized(t, 100, 1).rows())
-}
-
-func TestPadFitsExactly(t *testing.T) {
-	assert.Equal(t, "ab   ", pad("ab", 5, true))
-	assert.Equal(t, "   ab", pad("ab", 5, false))
-	assert.Equal(t, "abcde", pad("abcde", 5, true))
-	// Cut rather than allowed to run on, which would shove the row's remaining
-	// columns out of line.
-	assert.Equal(t, "abcde", pad("abcdefgh", 5, true))
-	// Counted in runes, not bytes: the die names carry typographic apostrophes.
-	assert.Len(t, []rune(pad("Tengri’s", 5, true)), 5)
-	assert.Len(t, []rune(pad("’", 5, false)), 5)
-}
-
-func TestFitSquaresOffALine(t *testing.T) {
-	m := sized(t, 20, 30)
-	assert.Equal(t, 20, lipgloss.Width(m.fit("short")))
-	assert.Equal(t, 20, lipgloss.Width(m.fit(strings.Repeat("x", 99))))
-	assert.Equal(t, 20, lipgloss.Width(m.fit("")))
 }

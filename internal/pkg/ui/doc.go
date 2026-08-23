@@ -5,8 +5,11 @@
 // # Layout
 //
 //   - table.go - Column, the column sets each view uses, sorting and search.
-//   - theme.go - the palette, the styles built from it, and the block wordmark.
-//   - model.go - the Bubble Tea model: state, key handling and rendering.
+//   - theme.go - the palette and the styles built from it.
+//   - flair.go - the block font and the color sweep that animates it.
+//   - model.go - the Bubble Tea model: state and key handling.
+//   - viewport.go - the screen and the scrolling window onto the dice.
+//   - render.go - the View: banner, header, rows and the footer.
 //
 // [Run] is the whole entry point. A command needs nothing from this package but
 // a slice of dice to hand it.

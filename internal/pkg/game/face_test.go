@@ -1,11 +1,32 @@
 package game
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// TestFaceStringNamesEveryFace pins the labels the table's column headers are
+// built from: a pip reads as its own number rather than its internal index,
+// which is one higher than the value dice.json encodes.
+func TestFaceStringNamesEveryFace(t *testing.T) {
+	assert.Equal(t, "1", One.String())
+	assert.Equal(t, "6", Six.String())
+	assert.Equal(t, "Joker", Joker.String())
+
+	for i, f := range Pips {
+		assert.Equal(t, strconv.Itoa(i+1), f.String(), "pip %d", i)
+	}
+
+	// Anything that is not a face says so rather than rendering as a stray
+	// number that would read as a real column.
+	assert.Equal(t, "Face(0)", Face(0).String())
+	assert.Equal(t, "Face(99)", Face(99).String())
+	assert.False(t, Face(0).Valid())
+	assert.False(t, Face(99).Valid())
+}
 
 func TestParseFaces(t *testing.T) {
 	dice := parseFixture(t)

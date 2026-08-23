@@ -215,22 +215,6 @@ func SortBy(dice []game.Die, col Column, desc bool) {
 	})
 }
 
-// Filter returns the dice whose name contains query, case-insensitively. An
-// empty query returns everything.
-func Filter(dice []game.Die, query string) []game.Die {
-	q := foldName(strings.TrimSpace(query))
-	if q == "" {
-		return slices.Clone(dice)
-	}
-	out := make([]game.Die, 0, len(dice))
-	for _, d := range dice {
-		if strings.Contains(foldName(d.Name), q) {
-			out = append(out, d)
-		}
-	}
-	return out
-}
-
 // FormatPct renders a probability as a percentage.
 func FormatPct(p float64) string { return fmt.Sprintf("%.1f%%", p*100) }
 
