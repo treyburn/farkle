@@ -11,13 +11,13 @@ You can sort dice based on face odds, effective odds including joker values, and
 
 ### Sorting odds and switching to effective odds
 
-In the above, you can see how to cycle through the different odds views and how to sort on different faces.
+Here you can see how to cycle through the different odds views and how to sort on different faces.
 
 ![sorting the dice table and cycling views](./assets/demo.gif)
 
 ### Selecting multiple faces to sort on the combined odds
 
-In the below you can see how to select multiple faces and sort on the combined probability that you will get 1 of the selected faces.
+Here you can see how to select multiple faces and sort on the combined probability that you will get 1 of the selected faces.
 
 ![Selecting multiple faces to sort on the combined odds](./assets/demo-multi-select.gif)
 
