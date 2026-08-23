@@ -17,11 +17,6 @@ func Run(dice []game.Die) error {
 	return err
 }
 
-// chrome is the number of lines the view spends on anything that is not a die:
-// the ten-line banner, a blank line, the column header, a blank line and the
-// help footer.
-const chrome = 14
-
 // view is what the table's cells report. The three answer different questions,
 // so this cycles rather than toggling: what the data stores, what a die
 // literally rolls, and what a die is worth once jokers are counted.
@@ -149,19 +144,20 @@ type model struct {
 	picked picks
 	focus  game.Face
 
-	// cursor is the highlighted row and top the first row drawn, so a list
-	// taller than the terminal scrolls rather than being cut off.
-	cursor int
-	top    int
-	width  int
-	height int
+	// port is the screen and how far the table is scrolled within it.
+	port viewport
 
 	// phase is how far the wordmark's colors have travelled, in characters.
 	phase int
 }
 
 func newModel(dice []game.Die) model {
-	m := model{dice: dice, view: literalOdds, width: 80, height: 24}
+	m := model{
+		dice: dice,
+		view: literalOdds,
+		// A size to render against until the first WindowSizeMsg arrives.
+		port: viewport{width: 80, height: 24},
+	}
 	return m.retable()
 }
 
@@ -197,7 +193,7 @@ const sumColumn = 1
 func (m model) setView(v view) model {
 	m.view = v
 	m.sort = min(m.sort, len(viewColumns(v))-1)
-	m.cursor, m.top = 0, 0
+	m.port = m.port.home()
 	return m.retable()
 }
 
@@ -210,7 +206,7 @@ func (m model) setView(v view) model {
 // are not probabilities.
 func (m model) setMulti(on bool) model {
 	m.multi = on
-	m.cursor, m.top = 0, 0
+	m.port = m.port.home()
 	if !on {
 		// Sort on the face the picking cursor was left on, so stepping out of
 		// the mode lands on the column the player was last reading.
@@ -298,14 +294,14 @@ func (m model) focusOn(dir int) model {
 // pick adds the focused face to the total, or takes it back out.
 func (m model) pick() model {
 	m.picked = m.picked.toggle(m.focus)
-	m.cursor, m.top = 0, 0
+	m.port = m.port.home()
 	return m.retable()
 }
 
 // reverse flips the sort without changing which column it is on.
 func (m model) reverse() model {
 	m.desc = !m.desc
-	m.cursor = 0
+	m.port.cursor = 0
 	return m.resort()
 }
 
@@ -325,7 +321,7 @@ func (m model) Init() tea.Cmd { return tick() }
 func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.width, m.height = msg.Width, msg.Height
+		m.port.width, m.port.height = msg.Width, msg.Height
 		return m.scroll(), nil
 	case tickMsg:
 		m.phase++
@@ -344,13 +340,13 @@ func (m model) key(msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, tea.Quit
 
 	case "up", "k":
-		m.cursor--
+		m.port.cursor--
 	case "down", "j":
-		m.cursor++
+		m.port.cursor++
 	case "home", "g":
-		m.cursor = 0
+		m.port.cursor = 0
 	case "end", "G":
-		m.cursor = len(m.dice) - 1
+		m.port.cursor = len(m.dice) - 1
 
 	// Multi-select spends the arrow keys and space on the selection: with the
 	// sort pinned to the total there is no column for them to move it to.
@@ -397,7 +393,7 @@ func (m model) sortOn(i int) model {
 		// as "which die rolls this most often".
 		m.desc = i != 0
 	}
-	m.cursor = 0
+	m.port.cursor = 0
 	return m.resort()
 }
 
@@ -408,16 +404,9 @@ func (m model) resort() model {
 
 // scroll clamps the cursor to the dice and the window to the cursor.
 func (m model) scroll() model {
-	m.cursor = min(max(m.cursor, 0), len(m.dice)-1)
-	switch rows := m.rows(); {
-	case m.cursor < m.top:
-		m.top = m.cursor
-	case m.cursor >= m.top+rows:
-		m.top = m.cursor - rows + 1
-	}
-	m.top = min(max(m.top, 0), max(len(m.dice)-m.rows(), 0))
+	m.port = m.port.clamp(len(m.dice), m.frameHeight())
 	return m
 }
 
-// rows is how many dice fit on screen.
-func (m model) rows() int { return max(m.height-chrome, 1) }
+// rows is how many dice fit on screen inside the live frame.
+func (m model) rows() int { return m.port.rows(m.frameHeight()) }
