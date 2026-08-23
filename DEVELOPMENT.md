@@ -23,6 +23,7 @@ Available recipes:
     build-linux           # Build for Linux (amd64).
     build-mac             # Build for macOS (arm64).
     build-windows         # Build for Windows (amd64).
+    ci                    # A quick and convenient wrapper to run a bunch of common commands before CI.
     clean                 # Remove the build output.
     cover                 # Open the coverage profile from `just test` in a browser.
     data-extract game_dir # Extract the source xml from a KCD2 install, then rebuild data/dice.json. Must provide the path to your game data.
