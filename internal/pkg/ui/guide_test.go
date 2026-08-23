@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
+
 	"github.com/charmbracelet/lipgloss"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -77,8 +78,10 @@ func TestTheGuideLeavesTheTableAlone(t *testing.T) {
 	m, _ = press(t, m, "?")
 	before := m
 
-	for _, key := range []string{"left", "right", "enter", " ", "insert", "delete",
-		"tab", "shift+tab", "backspace", "x", "\\", "r", "a", "d"} {
+	for _, key := range []string{
+		"left", "right", "enter", " ", "insert", "delete",
+		"tab", "shift+tab", "backspace", "x", "\\", "r", "a", "d",
+	} {
 		got, cmd := press(t, before, key)
 		assert.Nil(t, cmd)
 		// Which hand is showing is allowed to move; nothing about the table is.

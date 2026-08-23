@@ -151,6 +151,8 @@ func (m model) scrollGuide(act action) model {
 		m.guideTop = 0
 	case jumpEnd:
 		m.guideTop = len(m.guideLines())
+	default:
+		// should not reach this
 	}
 	return m.clampGuide()
 }
