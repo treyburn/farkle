@@ -96,4 +96,4 @@ Did the tool crash, or show you something that looks wrong? [Report a bug!](http
 Is there something you wish this tool did? [Request a feature!](https://github.com/treyburn/farkle/issues/new?template=feature-request.yml)
 
 ### Love this tool?
-If you love this tool and want to give back - then [Buy me a coffee!](https://github.com/sponsors/treyburn)
+If you love this tool and want to give something? [Buy me a coffee!](https://github.com/sponsors/treyburn)
