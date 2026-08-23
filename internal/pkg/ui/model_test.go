@@ -26,6 +26,12 @@ func press(t *testing.T, m model, key string) (model, tea.Cmd) {
 		msg = tea.KeyMsg{Type: tea.KeyRight}
 	case "down":
 		msg = tea.KeyMsg{Type: tea.KeyDown}
+	case "up":
+		msg = tea.KeyMsg{Type: tea.KeyUp}
+	case "home":
+		msg = tea.KeyMsg{Type: tea.KeyHome}
+	case "end":
+		msg = tea.KeyMsg{Type: tea.KeyEnd}
 	case " ":
 		msg = tea.KeyMsg{Type: tea.KeySpace}
 	default:
@@ -94,6 +100,35 @@ func TestColumnsPerView(t *testing.T) {
 	assert.Equal(t, []string{"Name", "1", "2", "3", "4", "5", "6"},
 		titles(viewColumns(effectiveOdds)),
 		"effective odds already count the joker into every pip")
+}
+
+// TestFaceIndexReportsAMissingColumn pins the zero that setMulti's `i > 0`
+// guard leans on: a face with no column of its own must not be mistaken for
+// the name column at index 0.
+func TestFaceIndexReportsAMissingColumn(t *testing.T) {
+	m := sized(t, 140, 30).setView(literalOdds)
+	require.Positive(t, m.faceIndex(game.Joker), "literal odds gives the joker a column")
+
+	// Effective odds folds the joker into every pip, so it has none.
+	m = m.setView(effectiveOdds)
+	assert.Zero(t, m.faceIndex(game.Joker))
+
+	// Nor does anything that is not a face at all.
+	assert.Zero(t, m.faceIndex(game.Face(0)))
+	assert.Zero(t, m.faceIndex(game.Face(99)))
+}
+
+// TestAnUnnamedViewFallsBackSafely covers the arms the compiler insists on.
+// They are unreachable for the views in `views`, which the exhaustiveness test
+// above guards - but a view added without its switch arms has to degrade to
+// something drawable rather than an empty table or a panic.
+func TestAnUnnamedViewFallsBackSafely(t *testing.T) {
+	stray := view(99)
+	assert.Equal(t, "unknown view", stray.String())
+	assert.Empty(t, stray.blurb())
+	assert.Equal(t, titles(viewColumns(literalOdds)), titles(viewColumns(stray)),
+		"an unnamed view falls back to a usable table")
+	assert.Equal(t, game.Literal, stray.mode(), "and to counting jokers literally")
 }
 
 func TestSortOnTogglesDirectionAndClamps(t *testing.T) {
@@ -219,6 +254,68 @@ func TestKeysDriveTheTable(t *testing.T) {
 	_, cmd := press(t, m, "q")
 	require.NotNil(t, cmd)
 	assert.IsType(t, tea.QuitMsg{}, cmd())
+}
+
+// TestCursorKeysWalkTheDice covers the row navigation TestKeysDriveTheTable
+// only reaches downwards: up, and the two jumps to either end.
+func TestCursorKeysWalkTheDice(t *testing.T) {
+	m := sized(t, 100, 30)
+	last := len(m.dice) - 1
+	require.Greater(t, last, m.rows(), "the dice must overflow the screen to test scrolling")
+
+	// Up from the top stays put rather than running off into a negative row.
+	m, _ = press(t, m, "up")
+	assert.Equal(t, 0, m.port.cursor)
+
+	m, _ = press(t, m, "down")
+	m, _ = press(t, m, "down")
+	require.Equal(t, 2, m.port.cursor)
+	m, _ = press(t, m, "up")
+	assert.Equal(t, 1, m.port.cursor)
+
+	// End jumps to the last die and drags the window with it.
+	m, _ = press(t, m, "end")
+	assert.Equal(t, last, m.port.cursor)
+	assert.Equal(t, last-m.rows()+1, m.port.top, "the last die has to be on screen")
+
+	// Down from the bottom stays put, the mirror of up from the top.
+	m, _ = press(t, m, "down")
+	assert.Equal(t, last, m.port.cursor)
+
+	// Home comes back to the top and brings the window with it.
+	m, _ = press(t, m, "home")
+	assert.Equal(t, 0, m.port.cursor)
+	assert.Equal(t, 0, m.port.top)
+
+	// The vi aliases do the same, so a reader of the help footer can use
+	// either set.
+	for _, keys := range [][2]string{{"j", "k"}, {"G", "g"}} {
+		down, up := keys[0], keys[1]
+		m, _ = press(t, m, down)
+		assert.NotEqual(t, 0, m.port.cursor, "%q should move down", down)
+		m, _ = press(t, m, up)
+		assert.Equal(t, 0, m.port.cursor, "%q should come back", up)
+	}
+}
+
+func TestUpdateIgnoresUnknownMessages(t *testing.T) {
+	m := sized(t, 100, 30)
+	m, _ = press(t, m, "down")
+
+	// Bubble Tea delivers messages this model has no interest in - focus and
+	// blur, mouse events, its own internal signals. They must leave the model
+	// exactly as it was rather than resetting the cursor or re-sorting.
+	next, cmd := m.Update(tea.FocusMsg{})
+	assert.Nil(t, cmd)
+	assert.Equal(t, m, next.(model))
+}
+
+func TestInitStartsTheAnimation(t *testing.T) {
+	// Without a command from Init the wordmark never gets its first tick and
+	// the gradient sits frozen for the life of the program.
+	cmd := sized(t, 100, 30).Init()
+	require.NotNil(t, cmd)
+	assert.IsType(t, tickMsg{}, cmd(), "the command has to deliver a tick")
 }
 
 func TestMultiSelectTotalsThePickedFaces(t *testing.T) {

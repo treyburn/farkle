@@ -247,3 +247,18 @@ func TestEveryColumnHasATint(t *testing.T) {
 		}
 	}
 }
+
+// TestAnUntintedColumnStillDraws covers the fallback that keeps the assertion
+// above from being the only thing standing between a hand-built Column and a
+// nil call. Column is exported with exported fields, so a caller outside the
+// constructors here can hand style a zero value.
+func TestAnUntintedColumnStillDraws(t *testing.T) {
+	d := parseFixture(t)[0]
+	var bare Column
+	require.Nil(t, bare.tint)
+
+	// It still has to pick up the row background, or a selected row would break
+	// into bands wherever an untinted column fell.
+	assert.Equal(t, rowBG(true), bare.style(d, true).GetBackground())
+	assert.Equal(t, rowBG(false), bare.style(d, false).GetBackground())
+}
