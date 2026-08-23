@@ -20,6 +20,18 @@ func press(t *testing.T, m model, key string) (model, tea.Cmd) {
 	switch key {
 	case "tab":
 		msg = tea.KeyMsg{Type: tea.KeyTab}
+	case "shift+tab":
+		msg = tea.KeyMsg{Type: tea.KeyShiftTab}
+	case "insert":
+		msg = tea.KeyMsg{Type: tea.KeyInsert}
+	case "delete":
+		msg = tea.KeyMsg{Type: tea.KeyDelete}
+	case "backspace":
+		msg = tea.KeyMsg{Type: tea.KeyBackspace}
+	case "enter":
+		msg = tea.KeyMsg{Type: tea.KeyEnter}
+	case "esc":
+		msg = tea.KeyMsg{Type: tea.KeyEsc}
 	case "left":
 		msg = tea.KeyMsg{Type: tea.KeyLeft}
 	case "right":
@@ -75,11 +87,18 @@ func TestViewCycleWrapsAndIsExhaustive(t *testing.T) {
 	seen := map[view]bool{}
 	v := views[0]
 	for range views {
-		assert.False(t, seen[v], "next() revisited %v before covering the rest", v)
+		assert.False(t, seen[v], "step revisited %v before covering the rest", v)
 		seen[v] = true
-		v = v.next()
+		v = v.step(1)
 	}
 	assert.Equal(t, views[0], v, "the cycle must close")
+
+	// And it closes the other way too, the view keys coming as a pair.
+	for range views {
+		v = v.step(-1)
+	}
+	assert.Equal(t, views[0], v, "the cycle must close backwards as well")
+	assert.Equal(t, views[0].step(-1), views[len(views)-1], "stepping back off the front wraps")
 
 	// Every view has to describe itself; a new one added without a label would
 	// otherwise show up on screen as the fallback text.
@@ -228,14 +247,20 @@ func TestKeysDriveTheTable(t *testing.T) {
 	m := sized(t, 100, 30)
 
 	before := m.view
+	m, _ = press(t, m, "delete")
+	assert.Equal(t, before.step(1), m.view, "delete advances the view")
+	m, _ = press(t, m, "insert")
+	assert.Equal(t, before, m.view, "insert walks back")
 	m, _ = press(t, m, "tab")
-	assert.Equal(t, before.next(), m.view, "tab advances the mode")
+	assert.Equal(t, before.step(1), m.view, "tab is delete's other half")
+	m, _ = press(t, m, "shift+tab")
+	assert.Equal(t, before, m.view, "and shift+tab is insert's")
 
 	m = m.sortOn(2)
 	sortBefore, descBefore := m.sort, m.desc
-	m, _ = press(t, m, " ")
+	m, _ = press(t, m, "\\")
 	assert.Equal(t, sortBefore, m.sort)
-	assert.Equal(t, !descBefore, m.desc, "space reverses without changing column")
+	assert.Equal(t, !descBefore, m.desc, "\\ reverses without changing column")
 
 	m, _ = press(t, m, "right")
 	assert.Equal(t, sortBefore+1, m.sort)
@@ -245,13 +270,23 @@ func TestKeysDriveTheTable(t *testing.T) {
 	m, _ = press(t, m, "down")
 	assert.Equal(t, 1, m.port.cursor)
 
-	// The shortcuts that were removed must stay removed.
-	for _, key := range []string{"n", "0", "1", "6"} {
+	// The shortcuts that were never bound, and the vi ones the two-handed
+	// keysets replaced, must all do nothing.
+	for _, key := range []string{"n", "0", "1", "6", "h", "j", "k", "l", "m", "g", "G"} {
 		got, _ := press(t, m, key)
-		assert.Equal(t, m.sort, got.sort, "key %q should do nothing", key)
+		assert.Equal(t, m, got, "key %q should do nothing", key)
 	}
 
-	_, cmd := press(t, m, "q")
+	// Space and enter are idle outside multi-select rather than reversing the
+	// sort, which has a key of its own now. They still say which hand is on the
+	// keyboard, so the footer is allowed to move under them.
+	for _, key := range []string{" ", "enter"} {
+		got, _ := press(t, m, key)
+		got.keys = m.keys
+		assert.Equal(t, m, got, "key %q only picks, and there is nothing to pick here", key)
+	}
+
+	_, cmd := press(t, m, "esc")
 	require.NotNil(t, cmd)
 	assert.IsType(t, tea.QuitMsg{}, cmd())
 }
@@ -287,9 +322,9 @@ func TestCursorKeysWalkTheDice(t *testing.T) {
 	assert.Equal(t, 0, m.port.cursor)
 	assert.Equal(t, 0, m.port.top)
 
-	// The vi aliases do the same, so a reader of the help footer can use
-	// either set.
-	for _, keys := range [][2]string{{"j", "k"}, {"G", "g"}} {
+	// The WASD keyset does the same, so a player with a hand on either end of
+	// the keyboard can drive the table.
+	for _, keys := range [][2]string{{"s", "w"}, {"e", "q"}} {
 		down, up := keys[0], keys[1]
 		m, _ = press(t, m, down)
 		assert.NotEqual(t, 0, m.port.cursor, "%q should move down", down)
@@ -323,7 +358,7 @@ func TestMultiSelectTotalsThePickedFaces(t *testing.T) {
 	m = m.sortOn(m.faceIndex(game.Five)) // the 5 column
 	require.Equal(t, game.Five, m.cols[m.sort].Face)
 
-	m, _ = press(t, m, "m")
+	m, _ = press(t, m, "backspace")
 	require.True(t, m.multi)
 	assert.Equal(t, []string{"Name", "Total", "1", "2", "3", "4", "5", "6", "Joker"},
 		titles(m.cols))
@@ -334,12 +369,12 @@ func TestMultiSelectTotalsThePickedFaces(t *testing.T) {
 	assert.True(t, m.desc, "best total first")
 
 	m.focus = game.Five
-	m, _ = press(t, m, " ")
+	m, _ = press(t, m, "enter")
 	assert.Equal(t, []game.Face{game.Five}, m.picked.faces())
 
 	// Picking a second face widens the total rather than replacing it.
 	m.focus = game.One
-	m, _ = press(t, m, " ")
+	m, _ = press(t, m, "enter")
 	assert.Equal(t, []game.Face{game.One, game.Five}, m.picked.faces())
 	assert.Equal(t, sumColumn, m.sort, "picking must not move the sort off the total")
 
@@ -352,13 +387,13 @@ func TestMultiSelectTotalsThePickedFaces(t *testing.T) {
 	}
 
 	// Picking the same face again takes it back out.
-	m, _ = press(t, m, " ")
+	m, _ = press(t, m, "enter")
 	assert.Equal(t, []game.Face{game.Five}, m.picked.faces())
 }
 
 func TestMultiSelectSpendsTheArrowKeysOnFaces(t *testing.T) {
 	m := sized(t, 140, 30)
-	m, _ = press(t, m, "m")
+	m, _ = press(t, m, "backspace")
 	require.Equal(t, game.One, m.focus, "picking opens on the first face")
 
 	sorted := m.sort
@@ -378,7 +413,8 @@ func TestMultiSelectSpendsTheArrowKeysOnFaces(t *testing.T) {
 	}
 	assert.Equal(t, game.Joker, m.focus)
 
-	// Space is spent on picking here, so reversing has its own key.
+	// Reversing has a key of its own, so it still works with the sort pinned
+	// to the total.
 	desc := m.desc
 	m, _ = press(t, m, "r")
 	assert.Equal(t, !desc, m.desc)
@@ -388,15 +424,17 @@ func TestMultiSelectSpendsTheArrowKeysOnFaces(t *testing.T) {
 func TestMultiSelectStaysAmongTheOddsViews(t *testing.T) {
 	m := sized(t, 140, 30)
 	m = m.setView(weights)
-	m, _ = press(t, m, "m")
+	m, _ = press(t, m, "backspace")
 	assert.Equal(t, literalOdds, m.view, "the weights view has no odds to total")
 
-	// Tab steps over the weights view rather than landing on a table with no
-	// total column in it.
-	for range len(views) + 1 {
-		m, _ = press(t, m, "tab")
-		require.NotEqual(t, weights, m.view)
-		require.Equal(t, "Total", m.cols[m.sort].Title)
+	// The view keys step over the weights view rather than landing on a table
+	// with no total column in it - going either way round.
+	for _, key := range []string{"delete", "insert", "tab", "shift+tab"} {
+		for range len(views) + 1 {
+			m, _ = press(t, m, key)
+			require.NotEqual(t, weights, m.view, "key %q", key)
+			require.Equal(t, "Total", m.cols[m.sort].Title)
+		}
 	}
 
 	// Under effective odds the joker has no column of its own, and the picker
@@ -410,12 +448,12 @@ func TestMultiSelectStaysAmongTheOddsViews(t *testing.T) {
 
 func TestLeavingMultiSelectKeepsThePickedFace(t *testing.T) {
 	m := sized(t, 140, 30)
-	m, _ = press(t, m, "m")
+	m, _ = press(t, m, "backspace")
 	m.focus = game.Six
-	m, _ = press(t, m, " ")
+	m, _ = press(t, m, "enter")
 	require.Equal(t, []game.Face{game.Six}, m.picked.faces())
 
-	m, _ = press(t, m, "m")
+	m, _ = press(t, m, "backspace")
 	require.False(t, m.multi)
 	assert.Equal(t, []string{"Name", "1", "2", "3", "4", "5", "6", "Joker"}, titles(m.cols))
 	// Dropping the total shifts every face one column left; the sort follows
@@ -424,13 +462,13 @@ func TestLeavingMultiSelectKeepsThePickedFace(t *testing.T) {
 
 	// The selection survives the round trip, so stepping out to read one
 	// column and back does not cost it.
-	m, _ = press(t, m, "m")
+	m, _ = press(t, m, "backspace")
 	assert.Equal(t, []game.Face{game.Six}, m.picked.faces())
 }
 
 func TestMultiSelectViewNamesWhatItTotals(t *testing.T) {
 	m := sized(t, 140, 30)
-	m, _ = press(t, m, "m")
+	m, _ = press(t, m, "backspace")
 
 	// The mode opens empty, and has to say so rather than showing a column of
 	// silent zeroes with no explanation for them.
@@ -440,10 +478,10 @@ func TestMultiSelectViewNamesWhatItTotals(t *testing.T) {
 	m = m.retable()
 	out := stripANSI(m.View())
 	assert.Contains(t, out, "(•) multi-select")
-	assert.Contains(t, out, "( ) single column", "the selector shows the mode m goes back to")
+	assert.Contains(t, out, "( ) single column", "the selector shows the mode backspace goes back to")
 	assert.Contains(t, out, "a 1 or a 5", "the blurb has to say what the total is a chance of")
 	assert.Contains(t, out, "•1", "a picked column is marked in the header")
-	assert.Contains(t, out, "space pick")
+	assert.Contains(t, out, "enter (select)")
 
 	// The blurb says what the total is a chance of, and only that: switching
 	// views changes what the numbers mean, which is the view blurb's job to
@@ -453,7 +491,7 @@ func TestMultiSelectViewNamesWhatItTotals(t *testing.T) {
 	assert.Contains(t, out, "a 1 or a 5")
 	assert.Contains(t, out, "(•) effective odds")
 
-	off, _ := press(t, m, "m")
+	off, _ := press(t, m, "backspace")
 	out = stripANSI(off.View())
 	assert.Contains(t, out, "(•) single column")
 	assert.Contains(t, out, "( ) multi-select")
