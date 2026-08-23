@@ -15,20 +15,10 @@ import (
 	"go.treyburn.dev/farkle/internal/pkg/ui"
 )
 
-// version is stamped in at release time with
-// -ldflags "-X main.version=$GITHUB_REF_NAME". Builds that skip the flag - a
-// local `go build`, or `go install` from the module proxy - leave it empty and
-// fall back to the module version recorded in the binary.
-var version string
-
-// buildVersion reports the tag this binary was built from, or the closest
-// thing to it available.
+// buildVersion reports the version recorded in the binary. Go stamps this from
+// the version control tag at build time, so a release built from v0.1.0 reports
+// exactly that; builds from an untagged or dirty tree report a pseudo-version.
 func buildVersion() string {
-	if version != "" {
-		return version
-	}
-	// go install records the module version here; a plain `go build` from a
-	// working tree records "(devel)".
 	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" {
 		return info.Main.Version
 	}
