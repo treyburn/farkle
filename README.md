@@ -17,6 +17,29 @@ The following tools are required for developing of this repo:
 
 It can be helpful to use [mise](https://mise.jdx.dev/) for managing versioned dependencies that tend tro differ across repos like golangci-lint.
 
+### Using Just
+
+The following recipes are available - and you can get an up to date list by running `just` or `just help`:
+
+```shell
+> just
+
+Available recipes:
+    build         # Build for Linux (amd64)
+    build-all     # Build every supported platform
+    build-linux   # Build for Linux (amd64)
+    build-mac     # Build for macOS (arm64)
+    build-windows # Build for Windows (amd64)
+    clean         # Remove the build output
+    cover         # Open the coverage profile from `just test` in a browser
+    fix           # Apply fixes for outdated APIs
+    fmt           # Format the code
+    help          # Prints all available recipes
+    lint          # Lint the code, applying fixes where possible
+    test          # Run the test suite with the race detector and per-package coverage
+    vet           # Report suspicious constructs
+```
+
 ### Updating Tool Versions
 If you update the version of a tool in use (such as `golangci-lint`) then be sure to update the [mise.toml](mise.toml) as our CI will leverage that.
 

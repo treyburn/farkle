@@ -1,3 +1,35 @@
+bin_dir := justfile_directory() / "bin"
+pkg := "./cmd/farkle"
+
+# Prints all available recipes
+help:
+    @just --list
+
+# Build for Linux (amd64)
+build: build-linux
+
+# Build for Linux (amd64)
+build-linux:
+    mkdir -p {{bin_dir}}
+    GOOS=linux GOARCH=amd64 go build -o {{bin_dir}}/farkle-linux-amd64 {{pkg}}
+
+# Build for macOS (arm64)
+build-mac:
+    mkdir -p {{bin_dir}}
+    GOOS=darwin GOARCH=arm64 go build -o {{bin_dir}}/farkle-darwin-arm64 {{pkg}}
+
+# Build for Windows (amd64)
+build-windows:
+    mkdir -p {{bin_dir}}
+    GOOS=windows GOARCH=amd64 go build -o {{bin_dir}}/farkle-windows-amd64.exe {{pkg}}
+
+# Build every supported platform
+build-all: build-linux build-mac build-windows
+
+# Remove the build output
+clean:
+    rm -rf {{bin_dir}}
+
 # Run the test suite with the race detector and per-package coverage
 test:
     go test -race -coverprofile=coverage.txt -covermode=atomic ./...
