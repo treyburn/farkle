@@ -9,31 +9,52 @@ import (
 	"go.treyburn.dev/farkle/internal/pkg/game"
 )
 
-func (m model) View() string {
-	// The banner is several lines tall, so blocks are split apart before the
+// frame is every line the view spends on something that is not a die: the
+// banner and column header above the rows, and the help footer below them.
+//
+// The lines are rendered rather than counted, so the budget the rows are given
+// and what actually reaches the screen cannot drift apart. Adding a line to the
+// banner costs a die automatically, where a hand-counted total would quietly
+// push the last row off the bottom instead.
+func (m model) frame() (head, foot []string) {
+	// The banner is several lines tall, so it is split apart before the
 	// per-line background is applied.
-	blocks := []string{m.banner(), "", m.header()}
-	end := min(m.top+m.rows(), len(m.dice))
-	for i := m.top; i < end; i++ {
-		blocks = append(blocks, m.row(m.dice[i], i == m.cursor))
-	}
-	blocks = append(blocks, "", helpStyle.Render(m.help()))
+	head = append(strings.Split(m.banner(), "\n"), "", m.header())
+	foot = []string{"", helpStyle.Render(m.help())}
+	return head, foot
+}
 
-	var lines []string
-	for _, block := range blocks {
-		for _, line := range strings.Split(block, "\n") {
-			lines = append(lines, m.fit(line))
-		}
+// frameHeight is how many lines [model.frame] takes up.
+func (m model) frameHeight() int {
+	head, foot := m.frame()
+	return len(head) + len(foot)
+}
+
+func (m model) View() string {
+	head, foot := m.frame()
+	rows := m.port.rows(len(head) + len(foot))
+
+	lines := make([]string, 0, m.port.height)
+	for _, line := range head {
+		lines = append(lines, m.fit(line))
 	}
+	end := min(m.port.top+rows, len(m.dice))
+	for i := m.port.top; i < end; i++ {
+		lines = append(lines, m.fit(m.row(m.dice[i], i == m.port.cursor)))
+	}
+	for _, line := range foot {
+		lines = append(lines, m.fit(line))
+	}
+
 	// The alt screen holds whatever was last drawn on it, so the view has to
 	// account for every line of the terminal. Short of the bottom - fewer dice
 	// than there is room for - it pads; past it - a screen shorter than the
-	// chrome, where rows() has already floored at one die - it cuts.
-	for len(lines) < m.height {
+	// frame, where rows has already floored at one die - it cuts.
+	for len(lines) < m.port.height {
 		lines = append(lines, m.fit(""))
 	}
-	if len(lines) > m.height {
-		lines = lines[:max(m.height, 1)]
+	if len(lines) > m.port.height {
+		lines = lines[:max(m.port.height, 1)]
 	}
 	return strings.Join(lines, "\n")
 }
@@ -53,8 +74,8 @@ func (m model) help() string {
 // Width would wrap the overrun onto a second line instead, which would push
 // every row below it out of place.
 func (m model) fit(line string) string {
-	line = pageStyle.MaxWidth(m.width).Render(line)
-	if gap := m.width - lipgloss.Width(line); gap > 0 {
+	line = pageStyle.MaxWidth(m.port.width).Render(line)
+	if gap := m.port.width - lipgloss.Width(line); gap > 0 {
 		line += pageStyle.Render(strings.Repeat(" ", gap))
 	}
 	return line
@@ -68,14 +89,15 @@ func (m model) banner() string {
 		m.cols[m.sort].Title, glyph(m.desc)))
 
 	// lipgloss sizes a block by its content and padding and hangs the border
-	// outside that, so the frame is two columns narrower than the terminal.
-	frame := max(m.width-2, 1)
-	inner := max(frame-2, 1)
+	// outside that, so the bordered block is two columns narrower than the
+	// terminal and its content two narrower again.
+	outer := max(m.port.width-2, 1)
+	inner := max(outer-2, 1)
 
 	// Trimmed to the content area for the same reason rows are: a wrapped
 	// banner would be taller than the layout budgets for.
 	trim := lipgloss.NewStyle().MaxWidth(inner)
-	return bannerStyle.Width(frame).Render(strings.Join([]string{
+	return bannerStyle.Width(outer).Render(strings.Join([]string{
 		trim.Render(gradient(mark[0], m.phase)),
 		trim.Render(gradient(mark[1], m.phase)),
 		trim.Render(gradient(mark[2], m.phase)),
