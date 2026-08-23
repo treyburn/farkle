@@ -20,6 +20,9 @@ func (m model) frame() (head, foot []string) {
 	// The banner is several lines tall, so it is split apart before the
 	// per-line background is applied.
 	head = append(strings.Split(m.banner(), "\n"), "", m.header())
+	// The blank line above the help is left blank here and filled in by
+	// [model.View]: it doubles as the scroll hint, which cannot be rendered
+	// until the frame's height is known.
 	foot = []string{"", helpStyle.Render(m.help())}
 	return head, foot
 }
@@ -42,6 +45,7 @@ func (m model) View() string {
 	for i := m.port.top; i < end; i++ {
 		lines = append(lines, m.fit(m.row(m.dice[i], i == m.port.cursor)))
 	}
+	foot[0] = m.scrollHint(end)
 	for _, line := range foot {
 		lines = append(lines, m.fit(line))
 	}
@@ -69,6 +73,29 @@ func (m model) help() string {
 	return "m multi-select · tab view · ←/→ sort column · space reverse · ↑/↓ scroll · q quit"
 }
 
+// scrollHint says which way the table carries on past the screen, end being
+// one past the last die drawn. It is empty when the whole table fits, which is
+// the ordinary case on a tall terminal.
+//
+// It goes in the spacer line the footer already spends between the last row
+// and the help rather than a line of its own. A hint that appeared only when
+// the table overran would take a die off the screen to say so, which on a
+// terminal one die short of fitting is enough to make the hint the reason it
+// no longer fits.
+func (m model) scrollHint(end int) string {
+	var parts []string
+	if m.port.top > 0 {
+		parts = append(parts, fmt.Sprintf("↑ %d more above", m.port.top))
+	}
+	if below := len(m.dice) - end; below > 0 {
+		parts = append(parts, fmt.Sprintf("↓ %d more below", below))
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return hintStyle.Render(strings.Join(parts, " · "))
+}
+
 // fit squares a line off to the terminal width: trimmed if it overruns, padded
 // if it falls short, so the themed background runs edge to edge. A lipgloss
 // Width would wrap the overrun onto a second line instead, which would push
@@ -84,7 +111,7 @@ func (m model) fit(line string) string {
 // banner is the framed title bar: the wordmark in block letters, with a
 // summary of what the table is showing on the line beneath.
 func (m model) banner() string {
-	mark := wordmark("FARKLE DICE")
+	mark := wordmark("KCD2 FARKLE DICE")
 	status := statusStyle.Render(fmt.Sprintf("sorted by %s %s",
 		m.cols[m.sort].Title, glyph(m.desc)))
 
@@ -134,9 +161,6 @@ func (m model) modeBlurb() string {
 		names[i] = f.String()
 	}
 	s := "Total is the chance of rolling a " + strings.Join(names, " or a ") + "."
-	if m.view.mode() == game.Effective {
-		s += " A joker counts once, not once per face."
-	}
 	return s
 }
 
